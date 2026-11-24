@@ -117,6 +117,27 @@ label{font-size:15px;color:var(--soft);display:block;margin:14px 0 6px}
 .rec details{border-top:2px solid var(--line);padding:6px 0}.rec summary{font-weight:600;font-size:18px;min-height:44px;display:flex;align-items:center;cursor:pointer}
 .rec summary span{margin-left:auto;font-size:14px;color:var(--soft);font-weight:500}
 .recnote{font-size:14px;color:var(--berryD);min-height:20px;margin:6px 0}
+.gems{display:inline-flex;align-items:center;gap:6px;background:var(--card);border-radius:16px;padding:6px 12px;font-weight:600;font-size:18px;box-shadow:0 3px 0 var(--line);font-variant-numeric:tabular-nums}
+.gems svg{width:20px;height:20px}
+.gems.bump{animation:bump .5s ease}
+@keyframes bump{40%{transform:scale(1.25)}}
+.ritem{position:absolute;pointer-events:none}.ritem svg{width:100%;height:auto;display:block;overflow:visible}
+.tabs{display:flex;gap:8px;margin:6px 0 12px}.tabs .chip{flex:1}
+.shopgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.item{background:var(--card);border-radius:18px;padding:6px 4px 8px;box-shadow:0 4px 0 var(--line);display:flex;flex-direction:column;align-items:center;gap:2px;min-height:150px;position:relative}
+.item .th{width:100%;aspect-ratio:1;display:grid;place-items:center;min-height:0}
+.item .th{overflow:hidden}
+.item .th svg{width:auto;height:auto;max-width:88%;max-height:88%;min-width:60%;overflow:visible}
+#shop{padding-bottom:84px}
+.item .sw{width:78%;aspect-ratio:1.2;border-radius:14px;box-shadow:inset 0 0 0 3px var(--ink)}
+.item .sw.round{border-radius:50%;aspect-ratio:1.6}
+.item b{font-size:14px;line-height:1.1;text-align:center}
+.item .pr{display:inline-flex;align-items:center;gap:4px;font-size:15px;font-weight:600}.item .pr svg{width:15px;height:15px}
+.item.own .pr{color:var(--soft);font-weight:500;font-size:13px}
+.item.onn{outline:4px solid var(--leaf)}
+.item.cant{opacity:.62}
+.item.no{animation:shake .14s linear 4}
+.shopsay{min-height:24px;text-align:center;font-size:16px;color:var(--soft);margin:0 0 8px}
 /* overlays */
 .over{position:fixed;inset:0;background:rgba(59,42,32,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
 .over.on{display:flex}
@@ -168,9 +189,9 @@ label{font-size:15px;color:var(--soft);display:block;margin:14px 0 6px}
 
   <!-- ROOM -->
   <section class="screen" id="roomScr">
-    <div class="top"><button class="back" id="switchKid">‹ Back</button><div class="grow"></div><b id="petTitle" style="font-size:20px"></b></div>
+    <div class="top"><button class="back" id="switchKid">‹ Back</button><b id="petTitle" style="font-size:20px"></b><div class="grow"></div><span class="gems" id="gemsRoom"></span></div>
     <div class="room" id="room">
-      <div class="window"></div><div class="rug"></div><div class="cushion"></div>
+      <div id="rDecor"></div><div class="window" id="rWindow"></div><div class="rug" id="rRug"></div><div class="cushion" id="rBed"></div><div id="rToys"></div>
       <div class="petwrap" id="roomPet"></div>
     </div>
     <div class="hud"><span class="hudlbl">Love</span><div class="meter" aria-label="Care meter"><i id="meterFill"></i></div><span class="hudlbl" id="stageLbl"></span></div>
@@ -178,14 +199,14 @@ label{font-size:15px;color:var(--soft);display:block;margin:14px 0 6px}
     <div class="doors">
       <button class="door" id="doorKitchen"><svg viewBox="0 0 40 40"><rect x="6" y="4" width="28" height="32" rx="5" fill="#9ad0c2" stroke="#3b2a20" stroke-width="2.5"/><path d="M6 16h28" stroke="#3b2a20" stroke-width="2.5"/><rect x="27" y="8" width="3" height="5" rx="1.5" fill="#3b2a20"/><rect x="27" y="20" width="3" height="7" rx="1.5" fill="#3b2a20"/></svg><span>Kitchen<small>Read to feed</small></span></button>
       <button class="door" id="doorWish"><svg viewBox="0 0 40 40"><ellipse cx="22" cy="17" rx="15" ry="12" fill="#fff" stroke="#3b2a20" stroke-width="2.5"/><circle cx="9" cy="32" r="3.5" fill="#fff" stroke="#3b2a20" stroke-width="2"/><path d="M16 17h12" stroke="#e0457b" stroke-width="3" stroke-linecap="round"/></svg><span>Wishes<small>What does it want?</small></span></button>
-      <button class="door" disabled><svg viewBox="0 0 40 40"><rect x="7" y="8" width="26" height="24" rx="4" fill="#fff" stroke="#3b2a20" stroke-width="2.5"/><path d="M12 16h16M12 22h10" stroke="#3b2a20" stroke-width="2.5" stroke-linecap="round"/></svg><span>Word cards<small>Coming next</small></span></button>
-      <button class="door" disabled><svg viewBox="0 0 40 40"><path d="M6 10h12a3 3 0 0 1 2 1 3 3 0 0 1 2-1h12v22H22a3 3 0 0 0-2 1 3 3 0 0 0-2-1H6z" fill="#ffc93c" stroke="#3b2a20" stroke-width="2.5" stroke-linejoin="round"/></svg><span>Stories<small>Coming next</small></span></button>
+      <button class="door" id="doorShop"><svg viewBox="0 0 40 40"><path d="M6 16 L10 6 H30 L34 16Z" fill="#ff9eb0" stroke="#3b2a20" stroke-width="2.5" stroke-linejoin="round"/><rect x="8" y="16" width="24" height="18" rx="2" fill="#fff" stroke="#3b2a20" stroke-width="2.5"/><rect x="17" y="23" width="7" height="11" fill="#c98d4f" stroke="#3b2a20" stroke-width="2"/></svg><span>Shop<small>Spend your gems</small></span></button>
+      <button class="door" disabled><svg viewBox="0 0 40 40"><path d="M6 10h12a3 3 0 0 1 2 1 3 3 0 0 1 2-1h12v22H22a3 3 0 0 0-2 1 3 3 0 0 0-2-1H6z" fill="#ffc93c" stroke="#3b2a20" stroke-width="2.5" stroke-linejoin="round"/></svg><span>Cards &amp; stories<small>Coming next</small></span></button>
     </div>
   </section>
 
   <!-- KITCHEN -->
   <section class="screen" id="kitchen">
-    <div class="top"><button class="back" data-room>‹ Back</button><div class="grow"></div><span class="hudlbl" id="kitchenCount"></span></div>
+    <div class="top"><button class="back" data-room>‹ Back</button><div class="grow"></div><span class="gems" id="gemsKitchen"></span></div>
     <div class="stage" id="kStage"><div class="petwrap" id="kPet"></div><div class="food" id="kFood"></div></div>
     <div class="task">
       <div class="say" id="kSay" style="margin:0 0 6px"></div>
@@ -200,17 +221,25 @@ label{font-size:15px;color:var(--soft);display:block;margin:14px 0 6px}
 
   <!-- WISH -->
   <section class="screen" id="wish">
-    <div class="top"><button class="back" data-room>‹ Back</button><div class="grow"></div></div>
+    <div class="top"><button class="back" data-room>‹ Back</button><div class="grow"></div><span class="gems" id="gemsWish"></span></div>
     <div class="stage" id="wStage"><div class="petwrap" id="wPet"></div><div class="bubble" id="wBubble"></div></div>
     <div class="task">
       <div class="say" id="wSay" style="margin:0"></div>
       <div class="choices" id="wChoices"></div>
     </div>
   </section>
+  <!-- SHOP -->
+  <section class="screen" id="shop">
+    <div class="top"><button class="back" data-room>‹ Back</button><div class="grow"></div><span class="gems" id="gemsShop"></span></div>
+    <div class="tabs" id="shopTabs"></div>
+    <p class="shopsay" id="shopSay"></p>
+    <div class="shopgrid" id="shopGrid"></div>
+  </section>
 </main>
 
 <button class="gear" id="gear" aria-label="Grown-up corner: press and hold"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="#3b2a20" stroke-width="2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="#3b2a20" stroke-width="2" stroke-linecap="round"/></svg></button>
 
+<div class="over" id="buyOver"><div class="sheet"><h2 id="buyTitle"></h2><div id="buyPic" style="width:190px;height:190px;margin:6px auto;display:grid;place-items:center"></div><div class="gbtns" style="justify-content:center"><button class="btn green" id="buyYes"></button><button class="btn ghost" id="buyNo">Not now</button></div></div></div>
 <div class="over" id="growOver"><div class="sheet"><h2 id="growTitle"></h2><div id="growPet"></div><p id="growLine" style="font-size:18px"></p><button class="btn green" id="growOk">Hooray!</button></div></div>
 <div class="over" id="napOver"><div class="sheet"><h2 id="napTitle"></h2><div id="napPet"></div><p style="font-size:18px">Reading made it so happy. Come back tomorrow!</p><button class="btn ghost" id="napOk">Back to readers</button></div></div>
 <div class="over" id="newFoodOver"><div class="sheet"><h2>Something new arrived!</h2><div id="nfFood" style="width:120px;height:120px;margin:8px auto"></div><p style="font-size:18px;margin:0 0 6px">It has a new letter. Tap it to hear its sound!</p><div class="tiles" id="nfLetter"></div><button class="btn green" id="nfOk" style="margin-top:14px">Let's read it!</button></div></div>
@@ -257,7 +286,7 @@ label{font-size:15px;color:var(--soft);display:block;margin:14px 0 6px}
     dino:    { fur: '#6cc3b8', dark: '#4a9e93', belly: '#ddf5ef', inner: '#f5a623' }
   };
 
-  function pet(kind, stage, pose) {
+  function pet(kind, stage, pose, wear) {
     const P = PAL[kind], s = [0.72, 0.86, 1][stage];
     const hr = [27, 27, 26][stage] * s;                   // head radius
     const brx = [17, 20, 24][stage] * s, bry = [14, 18, 23][stage] * s;
@@ -352,8 +381,26 @@ label{font-size:15px;color:var(--soft);display:block;margin:14px 0 6px}
     if (pose === 'surprised') extra += `<g stroke="${LINE}" stroke-width="3" stroke-linecap="round"><path d="M${-hr - 4} ${hy - hr * .9} l-7 -7 M0 ${hy - hr * 1.6} v-9 M${hr + 4} ${hy - hr * .9} l7 -7"/></g>`;
     if (kind === 'dragon' && stage === 2 && pose === 'happy') extra += `<g fill="#e9ecef" stroke="#c4c9cf" stroke-width="2"><circle cx="${hr * .9}" cy="${hy - hr * .1}" r="5"/><circle cx="${hr * 1.25}" cy="${hy - hr * .45}" r="7"/></g>`;
 
+    // ---- things the pet wears: {hat, neck, face, back} ----
+    const W = wear || {}, k = hr / 26, ny = hy + hr * 0.98;
+    let wBack = '', wNeck = '', wFace = '', wHat = '';
+    if (W.back === 'cape') wBack = `<path d="M${-brx * .95} ${ny - 3} Q${-brx * 2.3} ${by + bry * .4} ${-brx * 1.9} -1 L${brx * 1.9} -1 Q${brx * 2.3} ${by + bry * .4} ${brx * .95} ${ny - 3} Z" fill="#e0457b" ${ol}/>`;
+    if (W.back === 'wings') wBack = `<g fill="#dff4ff" stroke="#6fb0d6" stroke-width="2.5">` + [-1, 1].map(sd => `<ellipse cx="${sd * brx * 1.35}" cy="${by - bry * .55}" rx="${brx * .8}" ry="${bry * .95}" transform="rotate(${sd * 28} ${sd * brx * 1.35} ${by - bry * .55})"/><ellipse cx="${sd * brx * 1.2}" cy="${by + bry * .35}" rx="${brx * .55}" ry="${bry * .6}" transform="rotate(${sd * -20} ${sd * brx * 1.2} ${by + bry * .35})"/>`).join('') + `</g>`;
+    const band = (col, w) => `<path d="M${-hr * .62} ${ny - 3 * k} Q0 ${ny + 7 * k} ${hr * .62} ${ny - 3 * k}" fill="none" stroke="${LINE}" stroke-width="${(w + 4) * k}" stroke-linecap="round"/><path d="M${-hr * .62} ${ny - 3 * k} Q0 ${ny + 7 * k} ${hr * .62} ${ny - 3 * k}" fill="none" stroke="${col}" stroke-width="${w * k}" stroke-linecap="round"/>`;
+    if (W.neck === 'collar') wNeck = band('#e2393f', 5) + `<circle cx="0" cy="${ny + 8 * k}" r="${4.5 * k}" fill="#ffc93c" stroke="${LINE}" stroke-width="2"/>`;
+    if (W.neck === 'bowtie') wNeck = `<path d="M0 ${ny + 3 * k} l${-12 * k} ${-7 * k} v${14 * k}z M0 ${ny + 3 * k} l${12 * k} ${-7 * k} v${14 * k}z" fill="#5b8def" ${ol}/><circle cx="0" cy="${ny + 3 * k}" r="${3.5 * k}" fill="#3a6fd8" stroke="${LINE}" stroke-width="2"/>`;
+    if (W.neck === 'scarf') wNeck = `<path d="M${hr * .2} ${ny + 3 * k} l${3 * k} ${17 * k} l${10 * k} ${-2 * k} l${-4 * k} ${-16 * k}z" fill="#4fb062" ${ol}/>` + band('#5cc27a', 8);
+    const ey = hy - hr * .12;
+    if (W.face === 'glasses') wFace = `<g fill="rgba(255,255,255,.2)" stroke="${LINE}" stroke-width="${3 * k}"><circle cx="${-eg}" cy="${ey}" r="${er * 1.45}"/><circle cx="${eg}" cy="${ey}" r="${er * 1.45}"/></g><path d="M${-eg + er * 1.45} ${ey} H${eg - er * 1.45}" stroke="${LINE}" stroke-width="${3 * k}"/>`;
+    if (W.face === 'shades') wFace = `<g fill="#2b2b33" stroke="${LINE}" stroke-width="${2.5 * k}"><rect x="${-eg - er * 1.5}" y="${ey - er * 1.2}" width="${er * 3}" height="${er * 2.3}" rx="${er * .8}"/><rect x="${eg - er * 1.5}" y="${ey - er * 1.2}" width="${er * 3}" height="${er * 2.3}" rx="${er * .8}"/></g><path d="M${-eg + er * 1.5} ${ey - er * .3} H${eg - er * 1.5}" stroke="${LINE}" stroke-width="${3 * k}"/><path d="M${-eg - er * .8} ${ey - er * .5} l${er * .9} ${-er * .4} M${eg - er * .8} ${ey - er * .5} l${er * .9} ${-er * .4}" stroke="#fff" stroke-width="${2 * k}" stroke-linecap="round" opacity=".7"/>`;
+    const side = kind === 'unicorn' ? -hr * .5 : 0, lean = kind === 'unicorn' ? -18 : 0, ty = hy - hr * .9;
+    if (W.hat === 'bow') wHat = `<g transform="translate(${hr * .55} ${hy - hr * .78}) rotate(20)"><path d="M0 0 l${-13 * k} ${-9 * k} v${18 * k}z M0 0 l${13 * k} ${-9 * k} v${18 * k}z" fill="#ff5c8a" ${ol}/><circle r="${4 * k}" fill="#e0457b" stroke="${LINE}" stroke-width="2"/></g>`;
+    if (W.hat === 'flower') wHat = `<g transform="translate(${-hr * .58} ${hy - hr * .74})">` + [0, 72, 144, 216, 288].map(a => `<circle cx="${Math.cos(a * Math.PI / 180) * 6.5 * k}" cy="${Math.sin(a * Math.PI / 180) * 6.5 * k}" r="${5 * k}" fill="#fff" stroke="${LINE}" stroke-width="2"/>`).join('') + `<circle r="${4 * k}" fill="#ffc93c" stroke="${LINE}" stroke-width="2"/></g>`;
+    if (W.hat === 'party') wHat = `<g transform="translate(${side || -hr * .25} ${ty}) rotate(${lean || -12})"><path d="M${-12 * k} ${3 * k} L0 ${-30 * k} L${12 * k} ${3 * k} Z" fill="#8b5cf6" ${ol}/><path d="M${-8 * k} ${-8 * k} L${6 * k} ${-13 * k} M${-10 * k} ${-1 * k} L${10 * k} ${-4 * k}" stroke="#ffc93c" stroke-width="${3 * k}" stroke-linecap="round"/><circle cx="0" cy="${-31 * k}" r="${4.5 * k}" fill="#ffc93c" stroke="${LINE}" stroke-width="2"/></g>`;
+    if (W.hat === 'cap') wHat = `<g transform="translate(${side * .4} ${hy - hr * .78}) rotate(${lean * .5})"><path d="M${-hr * .78} ${3 * k} Q${-hr * .75} ${-hr * .6} 0 ${-hr * .6} Q${hr * .75} ${-hr * .6} ${hr * .78} ${3 * k} Z" fill="#5b8def" ${ol}/><path d="M${hr * .15} ${3 * k} Q${hr * 1.15} ${-3 * k} ${hr * 1.3} ${7 * k} Q${hr * .8} ${9 * k} ${hr * .15} ${3 * k}Z" fill="#3a6fd8" ${ol}/></g>`;
+    if (W.hat === 'crown') wHat = `<g transform="translate(${side} ${ty}) rotate(${lean})"><path d="M${-13 * k} ${2 * k} L${-16 * k} ${-15 * k} L${-6 * k} ${-7 * k} L0 ${-20 * k} L${6 * k} ${-7 * k} L${16 * k} ${-15 * k} L${13 * k} ${2 * k} Z" fill="#f2c94c" ${ol}/><circle cx="0" cy="${-6 * k}" r="${2.8 * k}" fill="#e2393f"/><circle cx="${-8 * k}" cy="${-3 * k}" r="${2 * k}" fill="#5b8def"/><circle cx="${8 * k}" cy="${-3 * k}" r="${2 * k}" fill="#5b8def"/></g>`;
     const tilt = pose === 'play' ? 'rotate(-6 0 0)' : '';
-    return `<g transform="${tilt}">${back}${body}${head}</g>${front}${extra}`;
+    return `<g transform="${tilt}">${wBack}${back}${body}${head}${wNeck}${wFace}${wHat}</g>${front}${extra}`;
   }
 
   root.pet = pet;
@@ -436,7 +483,8 @@ const ICONS={
  shoe:`<path d="M18 82 Q16 58 34 56 L48 40 L60 56 Q88 60 102 72 Q106 86 90 88 H24Z" fill="#5b8def" ${O}/><path d="M18 88 H104" ${O}/>`};
 const iconSvg=k=>`<svg viewBox="0 0 120 120" aria-hidden="true">${ICONS[k]}</svg>`;
 const EAR=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 3-2.5 4-3 6.5 0 2-1.5 3.5-3.5 3.5S8 17.5 8 17" fill="none" stroke="#3b2a20" stroke-width="2.2" stroke-linecap="round"/></svg>`;
-function petSvg(kind,stage,pose,extra,vb){return `<svg viewBox="${vb||'-70 -156 140 164'}" aria-hidden="true"><g class="pet-in">${pet(kind,stage,pose)}</g>${extra||''}</svg>`}
+let WEAR=null;
+function petSvg(kind,stage,pose,extra,vb,wear){return `<svg viewBox="${vb||'-70 -156 140 164'}" aria-hidden="true"><g class="pet-in">${pet(kind,stage,pose,wear===undefined?WEAR:wear)}</g>${extra||''}</svg>`}
 
 /* ================= saved data ================= */
 const $=id=>document.getElementById(id);
@@ -546,7 +594,7 @@ function maybeGrow(){if(kid.stage<2&&kid.meter>=100&&(kid.milestones||0)>kid.sta
 
 /* ================= screens ================= */
 function show(id){stopListening();document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));window.scrollTo(0,0)}
-function drawReaders(){const h=D.kids.map((k,i)=>`<button class="reader" data-kid="${i}">${petSvg(k.pet,k.stage,'happy','',['-46 -96 92 102','-56 -120 112 126','-66 -150 132 158'][k.stage])}<b>${esc(k.name)}</b><span>${esc(k.petName)}</span></button>`).join('');
+function drawReaders(){WEAR=null;const h=D.kids.map((k,i)=>`<button class="reader" data-kid="${i}">${petSvg(k.pet,k.stage,'happy','',['-46 -96 92 102','-56 -120 112 126','-66 -150 132 158'][k.stage],k.wear||null)}<b>${esc(k.name)}</b><span>${esc(k.petName)}</span></button>`).join('');
   $('readers').innerHTML=h+`<button class="reader add" id="addKid">+ Add a reader</button>`;show('who')}
 // new reader
 let newStart=1;
@@ -559,13 +607,13 @@ function drawPets(){$('petGrid').innerHTML=PETS.map(k=>`<button class="petpick${
 
 /* ================= the room ================= */
 function day(k){if(!k.day||k.day.d!==today())k.day={d:today(),ms:0,reads:0,napped:false};return k.day}
-function startKid(i){kid=D.kids[i];delete kid.napDate;day(kid);session={feeds:0,wishes:0,next:'feed'};openRoom(true)}
+function startKid(i){kid=D.kids[i];delete kid.napDate;day(kid);kid.gems=kid.gems||0;kid.own=kid.own||[];kid.wear=kid.wear||{};kid.home=kid.home||{};kid.off=kid.off||[];WEAR=kid.wear;session={feeds:0,wishes:0,next:'feed'};openRoom(true)}
 // only time spent actually reading (kitchen or wishes, app in front) counts toward the nap
 setInterval(()=>{if(!kid||document.hidden)return;if(!document.querySelector('#kitchen.on,#wish.on')||document.querySelector('.over.on'))return;const d=day(kid);d.ms+=1000;if(d.ms%10000===0)save()},1000);
 const MIN_READS=10;
 function napDue(){if(!kid||!D.napMin)return false;const d=day(kid);return d.napped||(d.ms>=D.napMin*60000&&d.reads>=MIN_READS)}
 function openRoom(greet){if(!kid)return;show('roomScr');if(napDue()){goNap();return}
-  $('petTitle').textContent=kid.petName;drawHud();
+  $('petTitle').textContent=kid.petName;drawHud();drawGems();dressRoom();
   const want=session.next;
   $('roomPet').innerHTML=petSvg(kid.pet,kid.stage,want==='feed'?'hungry':'happy');
   $('room').querySelectorAll('.bubble').forEach(b=>b.remove());
@@ -582,9 +630,75 @@ function advance(){if(session.next==='feed'){session.feeds++;session.next=sessio
 function goNap(){day(kid).napped=true;save();$('napTitle').textContent=`${kid.petName} is sleepy...`;$('napPet').innerHTML=petSvg(kid.pet,kid.stage,'sleep').replace('<svg','<svg class="bigpet"');
   $('room').classList.add('night');$('napOver').classList.add('on');say('Yawn... night night!',.8)}
 
+/* ================= gems, shop and the room's things ================= */
+const GEM=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9z" fill="#6cc3ff" stroke="#3b2a20" stroke-width="2" stroke-linejoin="round"/><path d="M2 9h20M9 3 7 9l5 12 5-12-2-6" fill="none" stroke="#3b2a20" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+const WALLS={peach:'linear-gradient(#ffdcc0,#ffe9d6)',mint:'linear-gradient(#cdeedd,#e2f6ec)',sky:'linear-gradient(#cfe8fb,#e6f3fd)',lilac:'linear-gradient(#e2d6fa,#f0e9fd)',
+ stripes:'repeating-linear-gradient(90deg,#ffd9e4 0 18px,#fff0f4 18px 36px)',dots:'radial-gradient(#ffd166 3.5px,transparent 4.5px) 0 0/26px 26px,linear-gradient(#fff6e0,#fff6e0)'};
+const RUGS={pink:'repeating-radial-gradient(#f4a7c3 0 10px,#fbd3e1 10px 20px)',blue:'repeating-radial-gradient(#8ec5f0 0 10px,#cfe8fb 10px 20px)',green:'repeating-radial-gradient(#8fd6a0 0 10px,#d2f0d9 10px 20px)',
+ rainbow:'radial-gradient(#ff8fb1 0 16%,#ffc93c 16% 32%,#7bd88f 32% 48%,#6cc3ff 48% 62%,#c9a7f5 62%)',stars:'radial-gradient(#ffe08a 2.5px,transparent 3.5px) 0 0/18px 14px,linear-gradient(#4a5a9a,#4a5a9a)'};
+const VIEWS={day:'linear-gradient(#bfe6ff,#e8f6ff)',rainbow:'radial-gradient(circle at 50% 115%,transparent 0 36%,#c9a7f5 36% 45%,#6cc3ff 45% 54%,#7bd88f 54% 63%,#ffc93c 63% 72%,#ff8fb1 72% 81%,transparent 81%),linear-gradient(#bfe6ff,#e8f6ff)',
+ night:'radial-gradient(#fff 1.3px,transparent 2.2px) 0 0/17px 19px,linear-gradient(#24305e,#3b4a85)',beach:'linear-gradient(#9fdcff 0 52%,#3aa0d8 52% 74%,#f2d59a 74%)'};
+const BEDS={teal:['#9ad0c2','#79b3a5'],pink:['#ffb3c4','#e98aa2'],yellow:['#ffd97a','#e0b64a']};
+const DECOR={
+ plant:{css:'right:21%;bottom:35%;width:14%',svg:`<svg viewBox="0 0 120 150"><path d="M60 96 Q30 70 26 30 Q52 44 60 96Z M60 96 Q90 70 96 26 Q66 44 60 96Z M60 96 Q54 50 60 10 Q70 50 60 96Z" fill="#5cc27a" ${O}/><path d="M34 96 H86 L78 146 H42Z" fill="#e8814a" ${O}/></svg>`},
+ lamp:{css:'right:1%;bottom:29%;width:15%',svg:`<svg viewBox="0 0 120 220"><path d="M60 70 V200" ${O}/><path d="M34 206 H86" stroke="#3b2a20" stroke-width="8" stroke-linecap="round"/><path d="M36 10 H84 L100 72 H20Z" fill="#ffd97a" ${O}/></svg>`},
+ picture:{css:'left:43%;top:11%;width:15%',svg:`<svg viewBox="0 0 120 100"><rect x="6" y="6" width="108" height="88" rx="8" fill="#fff" ${O}/><rect x="18" y="18" width="84" height="64" rx="4" fill="#bfe6ff"/><circle cx="82" cy="38" r="10" fill="#ffc93c"/><path d="M18 82 L46 50 L66 70 L80 58 L102 82Z" fill="#7bd88f"/></svg>`},
+ bunting:{css:'left:0;top:0;width:100%',svg:`<svg viewBox="0 0 400 54"><path d="M0 6 Q200 34 400 6" fill="none" stroke="#3b2a20" stroke-width="2.5"/>${[20,66,112,158,204,250,296,342].map((x,i)=>{const y=6+26*(1-((x+18-200)/200)**2)*.52;return `<path d="M${x} ${y} h36 l-18 26z" fill="${['#ff8fb1','#ffc93c','#7bd88f','#6cc3ff'][i%4]}" stroke="#3b2a20" stroke-width="2.5" stroke-linejoin="round"/>`}).join('')}</svg>`},
+ shelf:{css:'left:9%;bottom:38%;width:21%',svg:`<svg viewBox="0 0 120 96"><rect x="4" y="4" width="112" height="88" rx="6" fill="#c98d4f" ${O}/><path d="M4 48 H116" ${O}/><g ${O}><rect x="14" y="14" width="12" height="32" fill="#e2393f"/><rect x="26" y="20" width="12" height="26" fill="#5b8def"/><rect x="38" y="12" width="12" height="34" fill="#ffc93c"/><rect x="62" y="58" width="14" height="32" fill="#7bd88f"/><rect x="76" y="64" width="12" height="26" fill="#c9a7f5"/><rect x="88" y="56" width="12" height="34" fill="#ff8fb1"/></g></svg>`}};
+const TOYS={
+ ball:{css:'left:5%;bottom:4%;width:13%',svg:`<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="#ffc93c" ${O}/><path d="M12 48 Q60 20 108 48 M12 72 Q60 100 108 72" fill="none" stroke="#e2393f" stroke-width="8"/></svg>`},
+ yarn:{css:'right:6%;bottom:3%;width:12%',svg:`<svg viewBox="0 0 120 120"><circle cx="60" cy="56" r="44" fill="#c9a7f5" ${O}/><path d="M24 40 Q60 60 96 40 M20 62 Q60 84 100 62 M40 18 Q52 56 40 96 M72 14 Q86 56 74 98" fill="none" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/><path d="M92 86 q18 12 10 28" fill="none" ${O}/></svg>`},
+ blocks:{css:'left:17%;bottom:17%;width:13%',svg:`<svg viewBox="0 0 120 120"><rect x="8" y="62" width="50" height="50" rx="6" fill="#6cc3ff" ${O}/><rect x="62" y="62" width="50" height="50" rx="6" fill="#ff8fb1" ${O}/><rect x="35" y="10" width="50" height="50" rx="6" fill="#7bd88f" ${O}/></svg>`},
+ teddy:{css:'left:2%;bottom:21%;width:14%',svg:`<svg viewBox="0 0 120 140"><circle cx="34" cy="26" r="14" fill="#c98d4f" ${O}/><circle cx="86" cy="26" r="14" fill="#c98d4f" ${O}/><ellipse cx="60" cy="100" rx="36" ry="34" fill="#c98d4f" ${O}/><circle cx="60" cy="48" r="32" fill="#c98d4f" ${O}/><ellipse cx="60" cy="58" rx="13" ry="10" fill="#f3dcc0"/><circle cx="48" cy="42" r="4" fill="#3b2a20"/><circle cx="72" cy="42" r="4" fill="#3b2a20"/><ellipse cx="60" cy="54" rx="5" ry="3.5" fill="#3b2a20"/></svg>`}};
+// the catalogue. slot = only one of that kind is used at a time; no slot = shown whenever owned and switched on
+const SHOP=[
+ {id:'bow',cat:'pet',slot:'hat',name:'Bow',price:8},{id:'flower',cat:'pet',slot:'hat',name:'Flower',price:8},{id:'party',cat:'pet',slot:'hat',name:'Party hat',price:12},{id:'cap',cat:'pet',slot:'hat',name:'Cap',price:14},{id:'crown',cat:'pet',slot:'hat',name:'Crown',price:25},
+ {id:'collar',cat:'pet',slot:'neck',name:'Bell collar',price:8},{id:'bowtie',cat:'pet',slot:'neck',name:'Bow tie',price:10},{id:'scarf',cat:'pet',slot:'neck',name:'Scarf',price:12},
+ {id:'glasses',cat:'pet',slot:'face',name:'Glasses',price:12},{id:'shades',cat:'pet',slot:'face',name:'Sunglasses',price:15},
+ {id:'cape',cat:'pet',slot:'back',name:'Cape',price:18},{id:'wings',cat:'pet',slot:'back',name:'Fairy wings',price:22},
+ {id:'ball',cat:'toys',name:'Ball',price:8},{id:'yarn',cat:'toys',name:'Yarn ball',price:8},{id:'blocks',cat:'toys',name:'Blocks',price:10},{id:'teddy',cat:'toys',name:'Teddy',price:14},
+ {id:'rug-blue',cat:'home',slot:'rug',val:'blue',name:'Blue carpet',price:15},{id:'rug-green',cat:'home',slot:'rug',val:'green',name:'Green carpet',price:15},{id:'rug-stars',cat:'home',slot:'rug',val:'stars',name:'Star carpet',price:20},{id:'rug-rainbow',cat:'home',slot:'rug',val:'rainbow',name:'Rainbow carpet',price:24},
+ {id:'wall-mint',cat:'home',slot:'wall',val:'mint',name:'Mint walls',price:15},{id:'wall-sky',cat:'home',slot:'wall',val:'sky',name:'Blue walls',price:15},{id:'wall-lilac',cat:'home',slot:'wall',val:'lilac',name:'Purple walls',price:15},{id:'wall-stripes',cat:'home',slot:'wall',val:'stripes',name:'Stripy walls',price:22},{id:'wall-dots',cat:'home',slot:'wall',val:'dots',name:'Dotty walls',price:22},
+ {id:'view-rainbow',cat:'home',slot:'view',val:'rainbow',name:'Rainbow window',price:16},{id:'view-night',cat:'home',slot:'view',val:'night',name:'Starry window',price:18},{id:'view-beach',cat:'home',slot:'view',val:'beach',name:'Beach window',price:20},
+ {id:'bed-pink',cat:'home',slot:'bed',val:'pink',name:'Pink bed',price:12},{id:'bed-yellow',cat:'home',slot:'bed',val:'yellow',name:'Yellow bed',price:12},
+ {id:'picture',cat:'home',name:'Picture',price:12},{id:'plant',cat:'home',name:'Plant',price:12},{id:'bunting',cat:'home',name:'Party flags',price:15},{id:'lamp',cat:'home',name:'Lamp',price:16},{id:'shelf',cat:'home',name:'Bookshelf',price:20}];
+const DEFAULTS={rug:'pink',wall:'peach',view:'day',bed:'teal'};
+const owns=it=>kid.own.includes(it.id);
+function isOn(it){if(!owns(it))return false;if(it.cat==='pet')return kid.wear[it.slot]===it.id;if(it.slot)return kid.home[it.slot]===it.val;return !kid.off.includes(it.id)}
+function drawGems(bump){for(const id of ['gemsRoom','gemsKitchen','gemsWish','gemsShop']){const e=$(id);if(!e)continue;e.innerHTML=GEM+`<span>${kid?kid.gems:0}</span>`;if(bump){e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump')}}}
+function addGems(n){kid.gems=(kid.gems||0)+n;save();drawGems(true)}
+function dressRoom(){const h=kid.home;$('room').style.background=`linear-gradient(transparent 0 62%,var(--floor) 62%,var(--floor2)),${WALLS[h.wall||'peach']}`;
+  $('rRug').style.background=RUGS[h.rug||'pink'];$('rWindow').style.background=VIEWS[h.view||'day'];
+  const bd=BEDS[h.bed||'teal'];$('rBed').style.background=bd[0];$('rBed').style.boxShadow=`inset 0 -6px 0 ${bd[1]}`;
+  const put=(set)=>Object.keys(set).filter(id=>kid.own.includes(id)&&!kid.off.includes(id)).map(id=>`<div class="ritem" style="${set[id].css}">${set[id].svg}</div>`).join('');
+  $('rDecor').innerHTML=put(DECOR);$('rToys').innerHTML=put(TOYS)}
+// shop
+let shopTab='pet',buying=null;
+function thumb(it){if(it.cat==='pet')return `<div class="th">${petSvg(kid.pet,kid.stage,'happy','',['-46 -110 92 116','-56 -132 112 138','-66 -160 132 168'][kid.stage],{[it.slot]:it.id})}</div>`;
+  if(it.slot==='rug')return `<div class="th"><div class="sw round" style="background:${RUGS[it.val]}"></div></div>`;
+  if(it.slot==='wall')return `<div class="th"><div class="sw" style="background:${WALLS[it.val]}"></div></div>`;
+  if(it.slot==='view')return `<div class="th"><div class="sw" style="background:${VIEWS[it.val]};box-shadow:inset 0 0 0 5px #fff,0 0 0 3px var(--ink)"></div></div>`;
+  if(it.slot==='bed')return `<div class="th"><div class="sw round" style="background:${BEDS[it.val][0]};box-shadow:inset 0 -8px 0 ${BEDS[it.val][1]},inset 0 0 0 3px var(--ink)"></div></div>`;
+  return `<div class="th">${(DECOR[it.id]||TOYS[it.id]).svg}</div>`}
+function openShop(){show('shop');$('shopSay').textContent='Read words to earn gems!';drawShop()}
+function drawShop(){drawGems();const tabs=[['pet','For '+kid.petName],['toys','Toys'],['home','Home']];
+  $('shopTabs').innerHTML=tabs.map(([k,t])=>`<button class="chip${shopTab===k?' sel':''}" data-tab="${k}">${esc(t)}</button>`).join('');
+  $('shopGrid').innerHTML=SHOP.filter(it=>it.cat===shopTab).map(it=>{const o=owns(it),on=isOn(it);
+    return `<button class="item${o?' own':''}${on?' onn':''}${!o&&kid.gems<it.price?' cant':''}" data-item="${it.id}">${thumb(it)}<b>${it.name}</b><span class="pr">${o?(on?(it.cat==='pet'?'Wearing':'Using'):(it.cat==='pet'?'Tap to wear':'Tap to use')):GEM+it.price}</span></button>`}).join('')}
+function tapItem(id,el){const it=SHOP.find(x=>x.id===id);if(!it)return;
+  if(owns(it)){toggleItem(it);drawShop();return}
+  if(kid.gems<it.price){el.classList.remove('no');void el.offsetWidth;el.classList.add('no');const need=it.price-kid.gems;$('shopSay').textContent=`${need} more gem${need>1?'s':''} for the ${it.name.toLowerCase()}. Keep reading!`;return}
+  buying=it;$('buyTitle').textContent=it.name;$('buyPic').innerHTML=thumb(it);$('buyYes').innerHTML=`Get it! ${GEM.replace('<svg','<svg style="width:20px;height:20px;vertical-align:-3px"')} ${it.price}`;$('buyOver').classList.add('on')}
+function toggleItem(it){if(it.cat==='pet'){kid.wear[it.slot]=kid.wear[it.slot]===it.id?null:it.id}
+  else if(it.slot){kid.home[it.slot]=kid.home[it.slot]===it.val?DEFAULTS[it.slot]:it.val}
+  else{const i=kid.off.indexOf(it.id);if(i>=0)kid.off.splice(i,1);else kid.off.push(it.id)}save()}
+function buy(){const it=buying;buying=null;$('buyOver').classList.remove('on');if(!it||owns(it)||kid.gems<it.price)return;
+  kid.gems-=it.price;kid.own.push(it.id);if(it.cat==='pet')kid.wear[it.slot]=it.id;else if(it.slot)kid.home[it.slot]=it.val;save();confetti();
+  $('shopSay').textContent=it.cat==='pet'?`${kid.petName} loves it!`:'It is in the room now!';drawShop()}
+
 /* ================= kitchen: read to feed ================= */
 let kWord=null,kHelp=0,kMiss=0,kDone=false;
-function openKitchen(){if(napDue()){openRoom();return}show('kitchen');
+function openKitchen(){if(napDue()){openRoom();return}show('kitchen');drawGems();
   if(kid.newFood){const f=kid.newFood;$('nfFood').innerHTML=foodSvg(f);const nl=SETS[kid.set].letters.split('').find(c=>f.includes(c));
     $('nfLetter').innerHTML=`<button class="tile new" data-sound="${nl}">${nl}</button>`;$('newFoodOver').classList.add('on');say('Something new arrived!')}
   nextFood()}
@@ -601,7 +715,7 @@ function nextFood(){const k=kid,top=Math.min(k.set,4);let pool=[];for(let s=0;s<
   $('kTiles').innerHTML=units(kWord).map((u,i)=>`<button class="tile${newest.includes(u[0])&&k.set>0&&wordSet(kWord)===k.set?' new':''}" data-i="${i}" aria-label="sound ${u}">${u}</button>`).join('');
   $('kTiles').style.setProperty('--n',units(kWord).length);
   $('kSay').textContent='Slide your finger across the letters, then read it to feed '+kid.petName+'.';$('kHeard').textContent='';$('kMic').textContent='Read it to feed!';
-  $('kitchenCount').textContent=''}
+}
 function kTiles(){return [...$('kTiles').children]}
 function kListen(){if(kDone)return;ctx();
   const started=listen(wordMatch(kWord),(ok,text,noMic)=>{$('kMic').classList.remove('listening');$('kMic').textContent='Read it to feed!';
@@ -613,12 +727,12 @@ function kListen(){if(kDone)return;ctx();
 function feedWin(){if(kDone)return;kDone=true;stopListening();logRead(kWord,kHelp<2);
   kTiles().forEach((t,i)=>setTimeout(()=>t.classList.add('read'),i*160));
   setTimeout(()=>{$('kFood').classList.add('eaten');$('kPet').innerHTML=petSvg(kid.pet,kid.stage,'eat');say(['Yum!','Yummy!','Num num num!'][Math.floor(Math.random()*3)],1)},500);
-  setTimeout(()=>{$('kPet').innerHTML=petSvg(kid.pet,kid.stage,'happy');$('kSay').textContent=`${kid.petName} loved it!`;addCare(12);advance();
+  setTimeout(()=>{$('kPet').innerHTML=petSvg(kid.pet,kid.stage,'happy');$('kSay').textContent=`${kid.petName} loved it!`;addCare(12);addGems(1);advance();
     setTimeout(()=>{if(session.next==='feed'&&!napDue())nextFood();else openRoom()},1300)},1900)}
 
 /* ================= wishes ================= */
 let wWish=null,wChoices=[],wTries=0,wBusy=false;
-function openWish(){if(napDue()){openRoom();return}show('wish');
+function openWish(){if(napDue()){openRoom();return}show('wish');drawGems();
   const okAll=WISHES.filter(x=>x.set<=kid.set);kid.seenWish=kid.seenWish||[];let ok=okAll.filter(x=>!kid.seenWish.includes(x.w));if(!ok.length){kid.seenWish=[];ok=okAll.filter(x=>!wWish||x.w!==wWish.w)}wWish=ok[Math.floor(Math.random()*ok.length)];kid.seenWish.push(wWish.w);save();wTries=0;wBusy=false;
   // harder choices once she's doing well: distractors share letters with the answer
   const pool=availableWords(kid).filter(w=>w!==wWish.w&&!HEART.includes(w));
@@ -646,7 +760,7 @@ function act(kind,actName,done){const wrap=$('wPet');const P=kid.pet,S=kid.stage
 function choose(i){if(wBusy)return;wBusy=true;ctx();const w=wChoices[i],btn=document.querySelector(`[data-choice="${i}"]`);
   const target=WISHES.find(x=>x.w===w);
   if(w===wWish.w){btn.classList.add('right');logRead(w,wTries<2);kid.wishRight=(kid.wishRight||0)+1;save();
-    act(kid.pet,wWish.act,()=>{say('Yes! That\'s what I wanted!',1);addCare(10);advance();setTimeout(()=>openRoom(),1400)})}
+    act(kid.pet,wWish.act,()=>{say('Yes! That\'s what I wanted!',1);addCare(10);addGems(2);advance();setTimeout(()=>openRoom(),1400)})}
   else{wTries++;btn.classList.add('wrong');
     if(target){act(kid.pet,target.act,()=>{silly()})}
     else{const wrap=$('wPet');wrap.className='petwrap do-shake';wrap.innerHTML=petSvg(kid.pet,kid.stage,'surprised');setTimeout(()=>{wrap.className='petwrap';silly()},1100)}}}
@@ -658,9 +772,9 @@ function silly(){$('wPet').innerHTML=petSvg(kid.pet,kid.stage,'happy');say(['Hee
 function drawGrown(){let h='';
   if(kid){const rows=SETS.map((s,i)=>{const p=setProgress(kid,i);const st=i<kid.set?'Done':i===kid.set?`${Math.min(p.words,20)}/20 words, ${Math.min(p.days,2)}/2 days`:'Later';return `<tr><td>${s.name}</td><td>${st}</td></tr>`}).join('');
     const recent=kid.log.slice(-8).reverse().map(e=>`${esc(e.w)}${e.ind?'':' (helped)'}`).join(', ')||'None yet';
-    h+=`<p style="margin:6px 0"><b>${esc(kid.name)}</b> with ${esc(kid.petName)} (${PETNAMES[kid.pet].toLowerCase()}, ${STAGES[kid.stage].toLowerCase()} stage), love meter ${kid.meter}%.</p>
+    h+=`<p style="margin:6px 0"><b>${esc(kid.name)}</b> with ${esc(kid.petName)} (${PETNAMES[kid.pet].toLowerCase()}, ${STAGES[kid.stage].toLowerCase()} stage), love meter ${kid.meter}%, ${kid.gems||0} gems.</p>
     <table><tr><th>Letters</th><th>Progress</th></tr>${rows}</table><p style="font-size:14px;margin:4px 0"><b>Last words:</b> ${recent}</p>
-    <div class="gbtns"><button id="gMark">Mark current letters done</button><button id="gBack">Step back a set</button><button id="gWake">Wake the pet</button><button id="gReset">Remove this reader</button></div>`}
+    <div class="gbtns"><button id="gMark">Mark current letters done</button><button id="gBack">Step back a set</button><button id="gWake">Wake the pet</button><button id="gGems">Give 20 gems</button><button id="gReset">Remove this reader</button></div>`}
   const nRec=Object.keys(own).length;
   h+=`<label>Voices</label><div class="gbtns" style="margin-top:0"><button id="gRec">Record the voices (${nRec} recorded)</button></div>
   <label>Computer voice for anything not recorded</label><div class="chips"><button class="chip${D.robot!==false?' sel':''}" data-robot="1">On</button><button class="chip${D.robot===false?' sel':''}" data-robot="0">Off</button></div>`;
@@ -725,6 +839,8 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
   else if(t.dataset.sound){sound(t.dataset.sound);t.classList.add('lit');setTimeout(()=>t.classList.remove('lit'),500)}
   else if(t.dataset.ear!=null){const w=wChoices[+t.dataset.ear];const btn=document.querySelector(`[data-choice="${t.dataset.ear}"]`);btn.classList.add('lit');soundOut(w,null,false);setTimeout(()=>btn.classList.remove('lit'),1500);wTries=Math.max(wTries,0)}
   else if(t.dataset.choice!=null)choose(+t.dataset.choice);
+  else if(t.dataset.tab){shopTab=t.dataset.tab;drawShop()}
+  else if(t.dataset.item)tapItem(t.dataset.item,t);
   else if(t.dataset.nap){D.napMin=+t.dataset.nap;save();drawGrown()}
   else if(t.dataset.robot!=null){D.robot=t.dataset.robot==='1';save();drawGrown()}
   else if(t.id==='gRec'){$('grownOver').classList.remove('on');loadOwn().then(()=>{drawRec();$('recOver').classList.add('on')})}
@@ -738,8 +854,9 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
 $('toPets').onclick=()=>{const n=$('kidName').value.trim();if(!n){$('kidName').focus();return}pick=null;$('petName').value='';drawPets();$('chooseTitle').textContent=`Pick your pet, ${n}!`;show('choose')};
 $('petName').oninput=()=>{$('adopt').disabled=!pick};
 $('adopt').onclick=()=>{const n=$('kidName').value.trim()||'Reader',pn=$('petName').value.trim()||PETNAMES[pick];
-  D.kids.push({id:Date.now(),name:n,pet:pick,petName:pn,stage:0,meter:0,set:newStart,mastered:newStart?[true]:[],log:[],newFood:null,milestones:0,wishRight:0});save();startKid(D.kids.length-1)};
+  D.kids.push({id:Date.now(),name:n,pet:pick,petName:pn,stage:0,meter:0,set:newStart,mastered:newStart?[true]:[],log:[],newFood:null,milestones:0,wishRight:0,gems:0,own:[],wear:{},home:{},off:[]});save();startKid(D.kids.length-1)};
 $('switchKid').onclick=()=>{kid=null;drawReaders()};
+$('doorShop').onclick=openShop;$('buyYes').onclick=buy;$('buyNo').onclick=()=>{buying=null;$('buyOver').classList.remove('on')};
 $('doorKitchen').onclick=openKitchen;$('doorWish').onclick=openWish;
 $('kMic').onclick=kListen;$('kOk').onclick=feedWin;
 $('growOk').onclick=()=>{$('growOver').classList.remove('on');openRoom()};
@@ -749,6 +866,7 @@ $('grownClose').onclick=()=>{$('grownOver').classList.remove('on');if(kid&&docum
 $('grownBody').addEventListener('click',e=>{const t=e.target.closest('button');if(!t||!kid)return;
   if(t.id==='gMark'){unlockNext();drawGrown()}
   else if(t.id==='gBack'){if(kid.set>0){kid.set--;kid.mastered[kid.set]=false;kid.newFood=null;save()}drawGrown()}
+  else if(t.id==='gGems'){kid.gems=(kid.gems||0)+20;save();drawGems();drawGrown()}
   else if(t.id==='gWake'){kid.day={d:today(),ms:0,reads:0,napped:false};save();$('napOver').classList.remove('on');$('room').classList.remove('night');drawGrown()}
   else if(t.id==='gReset'){if(t.dataset.arm){D.kids.splice(D.kids.indexOf(kid),1);save();kid=null;$('grownOver').classList.remove('on');drawReaders()}else{t.dataset.arm=1;t.textContent='Tap again to remove'}}});
 // grown-up corner opens on a 1-second press, so little fingers don't wander in
