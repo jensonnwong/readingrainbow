@@ -62,6 +62,13 @@ label{font-size:15px;color:var(--soft);display:block;margin:14px 0 6px}
 .do-hop .pet-in{animation:hop .45s ease 4}
 @keyframes hop{50%{transform:translateY(-14%)}}
 .do-shake .pet-in{animation:shake .14s linear 6}
+.do-sit .pet-in{animation:sitdown .5s ease forwards}
+@keyframes sitdown{to{transform:scaleY(.8) translateY(5%)}}
+.do-nod .pet-in{animation:nodd .4s ease-in-out 4}
+@keyframes nodd{50%{transform:translateY(5%) rotate(5deg)}}
+.do-stomp .pet-in{animation:stompp .28s ease-in 6}
+@keyframes stompp{40%{transform:translateY(-9%)}80%{transform:translateY(1%) scaleY(.94)}}
+.do-freeze .pet-in{animation:none}
 @keyframes shake{25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
 .bubble{position:absolute;right:5%;top:6%;width:34%;max-width:150px;aspect-ratio:1.2;background:#fff;border-radius:50%;box-shadow:0 4px 0 var(--line);display:grid;place-items:center;animation:pop .5s cubic-bezier(.3,1.6,.5,1)}
 .bubble::before,.bubble::after{content:"";position:absolute;background:#fff;border-radius:50%;box-shadow:0 3px 0 var(--line)}
@@ -87,7 +94,8 @@ label{font-size:15px;color:var(--soft);display:block;margin:14px 0 6px}
 .food{position:absolute;right:7%;bottom:10%;width:30%;aspect-ratio:1;transition:all .6s cubic-bezier(.5,-0.3,.6,1.2)}
 .food svg{width:100%;height:100%}
 .food.eaten{right:42%;bottom:24%;width:6%;opacity:0}
-.tiles{display:flex;justify-content:center;gap:8px;flex-wrap:nowrap;margin:6px 0 2px}
+.tiles{--n:3;display:flex;justify-content:center;gap:8px;flex-wrap:nowrap;margin:6px 0 2px;touch-action:none}
+#kTiles .tile{width:min(86px,calc((min(100vw,480px) - 64px - (var(--n) - 1) * 8px) / var(--n)));font-size:min(68px,calc((min(100vw,480px) - 64px) / var(--n) * .72))}
 .tile{width:min(19vw,86px);aspect-ratio:1/1.1;background:var(--wall);border-radius:18px;font:700 clamp(46px,13vw,68px)/1 Andika,sans-serif;box-shadow:0 5px 0 var(--line);display:grid;place-items:center;transition:background .2s,color .2s,transform .15s}
 .tile.lit{background:var(--sun);transform:translateY(-4px)}.tile.read{background:var(--leaf);color:#fff}
 .tile.new{box-shadow:0 0 0 4px var(--berry),0 5px 0 var(--line)}
@@ -369,8 +377,8 @@ const SETS=[
 const HEART=['i','a','the','is','see'];
 // decodable words, tagged with the set that introduces their newest letter
 const WORDS={
- 0:'sat sad pat pan pad pin pit tap tan tin tip nap man map mat mad dad dip did sit sip an in it am ant and mint spin snap snip spit sand past mist pants stamp'.split(' '),
- 1:'dog cat pig top mom cap dig got pot kid cot nod mop can tag kit not gas pop cod dot pod kiss cop gap stop spot skip skin camp pond mask'.split(' '),
+ 0:'sat sad pat pan pad pin pit tap tan tin tip nap man map mat mad dad dip did sit sip an in it am ant and mint spin snap snip spit sand past mist pants stamp dim mid tad nip sap damp mast tint pant spat span stand dips naps maps pats taps sips tips pins mats ants pans mints spins'.split(' '),
+ 1:'dog cat pig top mom cap dig got pot kid cot nod mop can tag kit not gas pop cod dot pod kiss cop gap stop spot skip skin camp pond mask cog sag tot kin cats dogs pigs pots tops mops caps kits cots kids dots cast cost gasp stomp task disk scan skim snag stag moss toss act'.split(' '),
  2:'ham hen bed red hop hot rat bat bag net pet ten rob bib hat hit him rip rag rest beg egg'.split(' '),
  3:'nut fig bun sun fun cup mud bug hug run up us fan fat lip log lap hut tub'.split(' '),
  4:'jam yam wag zip van box fox web yes wet zap jet'.split(' ')};
@@ -378,7 +386,8 @@ const FOODS={0:['dip','mint'],1:['cod','pod','pop'],2:['ham','egg'],3:['nut','bu
 // pet wishes: word, which set it needs, the picture in the thought bubble, what the pet does
 const WISHES=[
  {w:'nap',set:0,icon:'bed',act:'nap'},{w:'sip',set:0,icon:'cup',act:'sip'},{w:'spin',set:0,icon:'swirl',act:'spin'},{w:'pat',set:0,icon:'hand',act:'pat'},
- {w:'dig',set:1,icon:'shovel',act:'dig'},{w:'kiss',set:1,icon:'heart',act:'kiss'},
+ {w:'sit',set:0,icon:'cushion',act:'sit'},{w:'tap',set:0,icon:'tapper',act:'pat'},{w:'stand',set:0,icon:'arrowup',act:'hop'},
+ {w:'dig',set:1,icon:'shovel',act:'dig'},{w:'kiss',set:1,icon:'heart',act:'kiss'},{w:'nod',set:1,icon:'nod',act:'nod'},{w:'pop',set:1,icon:'balloon',act:'pop'},{w:'skip',set:1,icon:'rope',act:'skip'},{w:'stomp',set:1,icon:'boot',act:'stomp'},{w:'stop',set:1,icon:'stopsign',act:'stop'},
  {w:'hop',set:2,icon:'spring',act:'hop'},{w:'hug',set:3,icon:'heart2',act:'hug'},{w:'run',set:3,icon:'shoe',act:'run'}];
 const PETNAMES={bunny:'Bunny',kitten:'Kitten',puppy:'Puppy',unicorn:'Baby unicorn',dragon:'Baby dragon',panda:'Baby panda',penguin:'Baby penguin',fox:'Fox cub',dino:'Baby dinosaur'};
 const STAGES=['Baby','Little','Big'];
@@ -398,7 +407,15 @@ const FOODART={
  fig:`<path d="M60 22 Q96 50 88 80 Q80 100 60 100 Q40 100 32 80 Q24 50 60 22Z" fill="#8b5cf6" ${O}/><path d="M60 22 V12" ${O}/>`,
  jam:`<rect x="30" y="34" width="60" height="64" rx="10" fill="#e0457b" ${O}/><rect x="26" y="22" width="68" height="16" rx="5" fill="#fff" ${O}/>`,
  yam:`<path d="M16 64 Q40 30 80 40 Q108 50 102 70 Q90 92 50 86 Q14 82 16 64Z" fill="#e8814a" ${O}/>`};
-const foodSvg=w=>`<svg viewBox="0 0 120 120" aria-hidden="true">${FOODART[w]||FOODART.pop}</svg>`;
+const TREATS=[
+ `<circle cx="60" cy="60" r="38" fill="#d9a05b" ${O}/><g fill="#6b3e1e"><circle cx="46" cy="48" r="5"/><circle cx="70" cy="44" r="5"/><circle cx="58" cy="66" r="5"/><circle cx="78" cy="70" r="5"/><circle cx="42" cy="74" r="5"/></g>`,
+ `<path d="M34 44 a12 12 0 1 1 14 -12 H72 a12 12 0 1 1 14 12 a12 12 0 1 1 -14 12 H48 a12 12 0 1 1 -14 -12Z" transform="translate(0 16)" fill="#f3dcc0" ${O}/>`,
+ `<path d="M30 62 H90 L82 102 H38Z" fill="#8fd3f4" ${O}/><path d="M26 62 Q28 30 60 30 Q92 30 94 62Z" fill="#ff9ecb" ${O}/><circle cx="60" cy="26" r="7" fill="#e2393f" ${O}/>`,
+ `<circle cx="60" cy="66" r="32" fill="#e2393f" ${O}/><path d="M60 34 q4 -16 18 -18" fill="none" ${O}/><path d="M60 36 q-18 -14 -26 0 q14 8 26 0Z" fill="#5cc27a" ${O}/>`,
+ `<path d="M20 60 Q60 22 100 60 Q60 98 20 60Z" fill="#ffc93c" ${O}/><path d="M40 60 H80" ${O}/>`,
+ `<rect x="26" y="40" width="68" height="46" rx="12" fill="#c9a7f5" ${O}/><path d="M26 56 H94" stroke="#fff" stroke-width="6"/><path d="M14 52 l12 10 l-12 10z M106 52 l-12 10 l12 10z" fill="#c9a7f5" ${O}/>`];
+const treatFor=w=>{let h=0;for(const c of w)h=(h*31+c.charCodeAt(0))%997;return TREATS[h%TREATS.length]};
+const foodSvg=w=>`<svg viewBox="0 0 120 120" aria-hidden="true">${FOODART[w]||treatFor(w)}</svg>`;
 const ICONS={
  bed:`<rect x="14" y="56" width="92" height="28" rx="8" fill="#9ad0c2" ${O}/><rect x="20" y="42" width="30" height="18" rx="8" fill="#fff" ${O}/><path d="M14 84 V96 M106 84 V96" ${O}/>`,
  cup:`<path d="M34 30 H86 L78 98 H42Z" fill="#bfe6ff" ${O}/><path d="M38 52 H82" stroke="#5b8def" stroke-width="4"/><path d="M70 30 L80 10" ${O}/>`,
@@ -408,6 +425,14 @@ const ICONS={
  heart:`<path d="M60 100 L22 62 A20 20 0 0 1 60 30 A20 20 0 0 1 98 62Z" fill="#ff5c8a" ${O}/>`,
  heart2:`<path d="M60 100 L22 62 A20 20 0 0 1 60 30 A20 20 0 0 1 98 62Z" fill="#ffb3c4" ${O}/><path d="M30 70 Q60 50 90 70" fill="none" ${O}/>`,
  spring:`<path d="M30 100 H90" ${O}/><path d="M40 92 L80 82 L40 72 L80 62 L40 52 L80 42" fill="none" stroke="#e0457b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`,
+ cushion:`<path d="M16 62 Q60 36 104 62 Q110 88 60 92 Q10 88 16 62Z" fill="#9ad0c2" ${O}/><path d="M34 64 Q60 54 86 64" fill="none" ${O}/>`,
+ tapper:`<path d="M60 22 V70" ${O}/><path d="M44 54 L60 72 L76 54" fill="none" ${O}/><path d="M28 92 H92" ${O}/><path d="M20 78 l-8 -8 M100 78 l8 -8" ${O}/>`,
+ arrowup:`<path d="M60 100 V28" stroke="#4f9e33" stroke-width="10" stroke-linecap="round"/><path d="M34 52 L60 24 L86 52" fill="none" stroke="#4f9e33" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`,
+ nod:`<circle cx="60" cy="60" r="26" fill="#ffd9b3" ${O}/><path d="M60 14 V24 M52 20 L60 12 L68 20 M60 106 V96 M52 100 L60 108 L68 100" fill="none" ${O}/>`,
+ balloon:`<path d="M60 78 Q30 62 32 40 Q36 14 60 14 Q84 14 88 40 Q90 62 60 78Z" fill="#ff5c8a" ${O}/><path d="M60 78 q-6 12 2 28" fill="none" ${O}/>`,
+ rope:`<path d="M22 40 Q60 130 98 40" fill="none" stroke="#e0457b" stroke-width="7" stroke-linecap="round"/><rect x="14" y="22" width="14" height="24" rx="6" fill="#ffc93c" ${O}/><rect x="92" y="22" width="14" height="24" rx="6" fill="#ffc93c" ${O}/>`,
+ boot:`<path d="M40 16 H70 V62 Q96 66 100 84 V92 H36 Z" fill="#c98d4f" ${O}/><path d="M30 104 H106" ${O}/><path d="M20 92 l-8 6 M112 92 l6 6" ${O}/>`,
+ stopsign:`<path d="M42 16 H78 L104 42 V78 L78 104 H42 L16 78 V42Z" fill="#e2393f" ${O}/><path d="M38 60 H82" stroke="#fff" stroke-width="10" stroke-linecap="round"/>`,
  shoe:`<path d="M18 82 Q16 58 34 56 L48 40 L60 56 Q88 60 102 72 Q106 86 90 88 H24Z" fill="#5b8def" ${O}/><path d="M18 88 H104" ${O}/>`};
 const iconSvg=k=>`<svg viewBox="0 0 120 120" aria-hidden="true">${ICONS[k]}</svg>`;
 const EAR=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 3-2.5 4-3 6.5 0 2-1.5 3.5-3.5 3.5S8 17.5 8 17" fill="none" stroke="#3b2a20" stroke-width="2.2" stroke-linecap="round"/></svg>`;
@@ -418,6 +443,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let D;try{D=JSON.parse(localStorage.getItem('readingpet')||'null')}catch(e){D=null}
 if(!D)D={kids:[],napMin:15};
+if(D.napMin===5)D.napMin=15;
 function save(){try{localStorage.setItem('readingpet',JSON.stringify(D))}catch(e){}}
 const today=()=>new Date().toISOString().slice(0,10);
 let kid=null,session=null;
@@ -466,6 +492,24 @@ function soundOut(word,tiles,thenSay){const c=ctx();if(!c)return 0;let t=c.curre
   const ms=(t-c.currentTime)*1000;setTimeout(()=>light(tiles,-1),ms);if(thenSay)setTimeout(()=>say(word,.7),ms+150);return ms+(thenSay?900:0)}
 function light(tiles,i){if(tiles)tiles.forEach((e,j)=>e.classList.toggle('lit',j===i))}
 
+/* ---- hold a letter: sounds you can stretch (sss, mmm, aaa) keep going while the finger stays; quick ones (t, p, d) play once ---- */
+const SUSTAIN='aeioufslmnrvz';let hold=null;
+function holdStart(u){const blend=!!hold;holdStop(true);const c=ctx();if(!c)return;const k=u[0].toLowerCase(),b=own['L:'+k]||buf[k];if(!b)return;
+  const g=c.createGain();g.connect(c.destination);const t0=c.currentTime+.01;if(blend){g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(1,t0+.07)}const h={g,srcs:[],timer:null,t0,min:Math.min(b.duration,.32)};hold=h;
+  const first=c.createBufferSource();first.buffer=b;h.srcs.push(first);
+  if(!SUSTAIN.includes(k)||u.length>1||b.duration<.22){first.connect(g);first.start(t0);h.oneShot=true;return}
+  const A=b.duration*.3,B=b.duration*.8,seg=B-A,xf=Math.min(.06,seg/3);
+  const g1=c.createGain();first.connect(g1);g1.connect(g);g1.gain.setValueAtTime(1,t0);g1.gain.setValueAtTime(1,t0+B-xf);g1.gain.linearRampToValueAtTime(0,t0+B);first.start(t0,0,B);
+  let next=t0+B-xf;
+  const sched=()=>{if(hold!==h)return;while(next<c.currentTime+.3){const sN=c.createBufferSource(),gs=c.createGain();sN.buffer=b;sN.connect(gs);gs.connect(g);
+      gs.gain.setValueAtTime(0,next);gs.gain.linearRampToValueAtTime(1,next+xf);gs.gain.setValueAtTime(1,next+seg-xf);gs.gain.linearRampToValueAtTime(0,next+seg);sN.start(next,A,seg);h.srcs.push(sN);if(h.srcs.length>10)h.srcs.shift();next+=seg-xf}
+    h.timer=setTimeout(sched,80)};sched()}
+function holdStop(sliding){const h=hold;if(!h)return;hold=null;clearTimeout(h.timer);if(h.oneShot||!ac)return;
+  // lifting the finger lets a short tap finish; sliding on fades straight into the next sound
+  const wait=sliding?0:Math.max(0,h.t0+h.min-ac.currentTime),fade=sliding?.16:.08,t=ac.currentTime+wait;
+  try{h.g.gain.cancelScheduledValues(t);h.g.gain.setValueAtTime(1,t);h.g.gain.linearRampToValueAtTime(0,t+fade)}catch(e){}
+  setTimeout(()=>h.srcs.forEach(x=>{try{x.stop()}catch(e){}}),(wait+fade+.05)*1000)}
+
 /* ================= listening ================= */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const inFrame=(()=>{try{return window.self!==window.top}catch(e){return true}})();
@@ -491,7 +535,7 @@ function wordMatch(target){return text=>text.toLowerCase().replace(/[^a-z' ]/g,'
 /* ================= progress ================= */
 function wordSet(w){for(let s=SETS.length-1;s>=0;s--)if(SETS[s].letters.split('').some(c=>w.includes(c)))return s;return 0}
 function availableWords(k){let out=[];for(let s=0;s<=Math.min(k.set,4);s++)out=out.concat(WORDS[s]||[]);return out}
-function logRead(w,independent){if(!kid)return;kid.log.push({w,ind:!!independent,d:today(),s:wordSet(w)});if(kid.log.length>2000)kid.log.splice(0,500);checkMastery();save()}
+function logRead(w,independent){if(!kid)return;day(kid).reads++;kid.log.push({w,ind:!!independent,d:today(),s:wordSet(w)});if(kid.log.length>2000)kid.log.splice(0,500);checkMastery();save()}
 function setProgress(k,s){const L=k.log.filter(e=>e.ind&&e.s===s);return{words:L.length,days:new Set(L.map(e=>e.d)).size}}
 function checkMastery(){const s=kid.set;if(s>=SETS.length-1)return;const p=setProgress(kid,s);if(p.words>=20&&p.days>=2)unlockNext()}
 function unlockNext(){kid.mastered[kid.set]=true;kid.set++;kid.newFood=(FOODS[kid.set]||[])[0]||null;kid.milestones=(kid.milestones||0)+1;save()}
@@ -514,8 +558,12 @@ let pick=null;
 function drawPets(){$('petGrid').innerHTML=PETS.map(k=>`<button class="petpick${pick===k?' sel':''}" data-pet="${k}">${petSvg(k,0,'happy','','-46 -96 92 102')}<span>${PETNAMES[k]}</span></button>`).join('');$('adopt').disabled=!pick}
 
 /* ================= the room ================= */
-function startKid(i){kid=D.kids[i];session={start:Date.now(),feeds:0,wishes:0,next:'feed'};if(kid.napDate===today())session.start=0;openRoom(true)}
-function napDue(){return session&&(Date.now()-session.start)/60000>=D.napMin}
+function day(k){if(!k.day||k.day.d!==today())k.day={d:today(),ms:0,reads:0,napped:false};return k.day}
+function startKid(i){kid=D.kids[i];delete kid.napDate;day(kid);session={feeds:0,wishes:0,next:'feed'};openRoom(true)}
+// only time spent actually reading (kitchen or wishes, app in front) counts toward the nap
+setInterval(()=>{if(!kid||document.hidden)return;if(!document.querySelector('#kitchen.on,#wish.on')||document.querySelector('.over.on'))return;const d=day(kid);d.ms+=1000;if(d.ms%10000===0)save()},1000);
+const MIN_READS=10;
+function napDue(){if(!kid||!D.napMin)return false;const d=day(kid);return d.napped||(d.ms>=D.napMin*60000&&d.reads>=MIN_READS)}
 function openRoom(greet){if(!kid)return;show('roomScr');if(napDue()){goNap();return}
   $('petTitle').textContent=kid.petName;drawHud();
   const want=session.next;
@@ -531,7 +579,7 @@ function openRoom(greet){if(!kid)return;show('roomScr');if(napDue()){goNap();ret
   if(kid.newFood&&want==='feed')$('roomSay').textContent='Something new arrived in the kitchen!'}
 function drawHud(){$('meterFill').style.width=kid.meter+'%';$('stageLbl').textContent=STAGES[kid.stage]}
 function advance(){if(session.next==='feed'){session.feeds++;session.next=session.feeds>=2&&session.feeds%2===0?'wish':'feed'}else{session.wishes++;session.next='feed'}}
-function goNap(){kid.napDate=today();save();$('napTitle').textContent=`${kid.petName} is sleepy...`;$('napPet').innerHTML=petSvg(kid.pet,kid.stage,'sleep').replace('<svg','<svg class="bigpet"');
+function goNap(){day(kid).napped=true;save();$('napTitle').textContent=`${kid.petName} is sleepy...`;$('napPet').innerHTML=petSvg(kid.pet,kid.stage,'sleep').replace('<svg','<svg class="bigpet"');
   $('room').classList.add('night');$('napOver').classList.add('on');say('Yawn... night night!',.8)}
 
 /* ================= kitchen: read to feed ================= */
@@ -540,15 +588,19 @@ function openKitchen(){if(napDue()){openRoom();return}show('kitchen');
   if(kid.newFood){const f=kid.newFood;$('nfFood').innerHTML=foodSvg(f);const nl=SETS[kid.set].letters.split('').find(c=>f.includes(c));
     $('nfLetter').innerHTML=`<button class="tile new" data-sound="${nl}">${nl}</button>`;$('newFoodOver').classList.add('on');say('Something new arrived!')}
   nextFood()}
-function nextFood(){const k=kid;let pool=[];for(let s=0;s<=Math.min(k.set,4);s++)pool=pool.concat(FOODS[s]||[]);
-  const recent=FOODS[Math.min(k.set,4)]||[];
-  if(k.newFood){kWord=k.newFood;k.newFood=null;save()}
-  else{let p=(Math.random()<.5&&recent.length)?recent:pool;let w;do{w=p[Math.floor(Math.random()*p.length)]}while(p.length>1&&w===kWord);kWord=w}
+function nextFood(){const k=kid,top=Math.min(k.set,4);let pool=[];for(let s=0;s<=top;s++)pool=pool.concat(WORDS[s]||[]);
+  if(k.newFood){kWord=k.newFood;k.newFood=null}
+  else{k.seen=k.seen||[];let fresh=pool.filter(w=>!k.seen.includes(w)&&w!==kWord);if(!fresh.length){k.seen=[];fresh=pool.filter(w=>w!==kWord)}
+    // half the time a word with her newest letters, real foods first
+    const newest=fresh.filter(w=>wordSet(w)===top),foods=fresh.filter(w=>FOODART[w]);
+    const from=(foods.length&&Math.random()<.35)?foods:(newest.length&&Math.random()<.5)?newest:fresh;kWord=from[Math.floor(Math.random()*from.length)]}
+  k.seen=k.seen||[];if(!k.seen.includes(kWord))k.seen.push(kWord);save();
   kHelp=0;kMiss=0;kDone=false;
   $('kPet').innerHTML=petSvg(k.pet,k.stage,'hungry');$('kFood').className='food';$('kFood').innerHTML=foodSvg(kWord);
   const newest=SETS[Math.min(k.set,4)].letters;
   $('kTiles').innerHTML=units(kWord).map((u,i)=>`<button class="tile${newest.includes(u[0])&&k.set>0&&wordSet(kWord)===k.set?' new':''}" data-i="${i}" aria-label="sound ${u}">${u}</button>`).join('');
-  $('kSay').textContent='Read the word to feed '+kid.petName+'.';$('kHeard').textContent='';$('kMic').textContent='Read it to feed!';
+  $('kTiles').style.setProperty('--n',units(kWord).length);
+  $('kSay').textContent='Slide your finger across the letters, then read it to feed '+kid.petName+'.';$('kHeard').textContent='';$('kMic').textContent='Read it to feed!';
   $('kitchenCount').textContent=''}
 function kTiles(){return [...$('kTiles').children]}
 function kListen(){if(kDone)return;ctx();
@@ -567,7 +619,7 @@ function feedWin(){if(kDone)return;kDone=true;stopListening();logRead(kWord,kHel
 /* ================= wishes ================= */
 let wWish=null,wChoices=[],wTries=0,wBusy=false;
 function openWish(){if(napDue()){openRoom();return}show('wish');
-  const ok=WISHES.filter(x=>x.set<=kid.set);wWish=ok[Math.floor(Math.random()*ok.length)];wTries=0;wBusy=false;
+  const okAll=WISHES.filter(x=>x.set<=kid.set);kid.seenWish=kid.seenWish||[];let ok=okAll.filter(x=>!kid.seenWish.includes(x.w));if(!ok.length){kid.seenWish=[];ok=okAll.filter(x=>!wWish||x.w!==wWish.w)}wWish=ok[Math.floor(Math.random()*ok.length)];kid.seenWish.push(wWish.w);save();wTries=0;wBusy=false;
   // harder choices once she's doing well: distractors share letters with the answer
   const pool=availableWords(kid).filter(w=>w!==wWish.w&&!HEART.includes(w));
   const hard=(kid.wishRight||0)>=6;
@@ -584,7 +636,8 @@ function openWish(){if(napDue()){openRoom();return}show('wish');
   say('What do I want?')}
 function act(kind,actName,done){const wrap=$('wPet');const P=kid.pet,S=kid.stage;let pose='happy',cls='',extra='';
   if(actName==='nap'){pose='sleep'}else if(actName==='sip'){pose='eat';extra=`<g transform="translate(40 -60) scale(.45)">${ICONS.cup}</g>`}
-  else if(actName==='spin')cls='do-spin';else if(actName==='hop')cls='do-hop';else if(actName==='run')cls='do-hop';
+  else if(actName==='spin')cls='do-spin';else if(actName==='hop')cls='do-hop';else if(actName==='run'||actName==='skip')cls='do-hop';else if(actName==='sit')cls='do-sit';else if(actName==='nod')cls='do-nod';else if(actName==='stomp')cls='do-stomp';else if(actName==='stop'){pose='surprised';cls='do-freeze'}
+  else if(actName==='pop'){cls='do-hop';extra=`<g transform="translate(34 -178) scale(.5)">${ICONS.balloon}</g>`}
   else if(actName==='dig'){pose='play';extra=`<path d="M-40 4 Q0 -18 40 4Z" fill="#8a5a2b" stroke="#3b2a20" stroke-width="3"/><g fill="#8a5a2b"><circle cx="-46" cy="-30" r="5"/><circle cx="50" cy="-36" r="5"/><circle cx="-58" cy="-50" r="4"/></g>`}
   else if(actName==='pat'){extra=`<g transform="translate(-30 -175) scale(.5)">${ICONS.hand}</g>`}
   else if(actName==='kiss'||actName==='hug'){extra=`<g transform="translate(28 -170) scale(.35)">${ICONS.heart}</g><g transform="translate(-60 -150) scale(.25)">${ICONS.heart}</g>`}
@@ -614,7 +667,8 @@ function drawGrown(){let h='';
   const vs=englishVoices().slice(0,8),cur=pickVoice();
   h+=`<label>Computer voice</label>${vs.length?`<div class="chips">${vs.map((v,i)=>`<button class="chip${cur&&v.name===cur.name?' sel':''}" data-voice="${i}">${esc(v.name.replace(/\s*\(.*\)/,''))}${/premium|enhanced|natural|neural/i.test(v.name)?' ★':''}</button>`).join('')}</div>`:'<p style="font-size:14px;color:var(--soft)">No voices found yet. Close and reopen this corner.</p>'}
   <p style="font-size:13px;color:var(--soft);margin:8px 0 0">Tap a voice to hear it. ★ = a natural-sounding voice. On iPhone you can add free better ones: Settings › Accessibility › Spoken Content › Voices › English, then download one marked Enhanced or Premium (such as Ava or Zoe) and reopen the app.</p>
-  <label for="napSel">Nap after</label><div class="chips">${[5,10,15,20,30].map(m=>`<button class="chip${D.napMin===m?' sel':''}" data-nap="${m}">${m} min</button>`).join('')}</div>
+  <label>Pet naps after this much reading</label><div class="chips">${[10,15,20,30,0].map(m=>`<button class="chip${D.napMin===m?' sel':''}" data-nap="${m}">${m?m+' min':'Never'}</button>`).join('')}</div>
+  <p style="font-size:13px;color:var(--soft);margin:8px 0 0">Only time in the kitchen or wishes counts, and never before ${MIN_READS} words.${kid?` Today: ${Math.round(day(kid).ms/60000)} min, ${day(kid).reads} words.`:''}</p>
   <p style="font-size:14px;color:var(--soft);margin-top:12px">Mic: ${SR?'available in this browser':'not available here. Open from your own site in Safari or Chrome.'}${inFrame?' Inside Claude, the mic only works in Chrome on a computer.':''}</p>`;
   $('grownBody').innerHTML=h;$('grownOver').classList.add('on')}
 
@@ -680,7 +734,6 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
   else if(t.id==='recImport')$('recFile').click();
   else if(t.id==='recClose'){recStop();$('recOver').classList.remove('on');drawGrown()}
   else if(t.dataset.voice!=null){const v=englishVoices().slice(0,8)[+t.dataset.voice];if(v){D.voice=v.name;save();drawGrown();sayDevice(`Hi! I'm your pet's voice. Yum!`)}}
-  else if(t.classList.contains('tile')&&t.dataset.i!=null&&t.closest('#kTiles')){const i=+t.dataset.i;kHelp=Math.max(kHelp,1);const us=units(kWord);sayUnit(us[i]);light(kTiles(),i);setTimeout(()=>light(kTiles(),-1),500)}
 });
 $('toPets').onclick=()=>{const n=$('kidName').value.trim();if(!n){$('kidName').focus();return}pick=null;$('petName').value='';drawPets();$('chooseTitle').textContent=`Pick your pet, ${n}!`;show('choose')};
 $('petName').oninput=()=>{$('adopt').disabled=!pick};
@@ -696,7 +749,7 @@ $('grownClose').onclick=()=>{$('grownOver').classList.remove('on');if(kid&&docum
 $('grownBody').addEventListener('click',e=>{const t=e.target.closest('button');if(!t||!kid)return;
   if(t.id==='gMark'){unlockNext();drawGrown()}
   else if(t.id==='gBack'){if(kid.set>0){kid.set--;kid.mastered[kid.set]=false;kid.newFood=null;save()}drawGrown()}
-  else if(t.id==='gWake'){session.start=Date.now();kid.napDate=null;save();$('napOver').classList.remove('on');$('room').classList.remove('night');drawGrown()}
+  else if(t.id==='gWake'){kid.day={d:today(),ms:0,reads:0,napped:false};save();$('napOver').classList.remove('on');$('room').classList.remove('night');drawGrown()}
   else if(t.id==='gReset'){if(t.dataset.arm){D.kids.splice(D.kids.indexOf(kid),1);save();kid=null;$('grownOver').classList.remove('on');drawReaders()}else{t.dataset.arm=1;t.textContent='Tap again to remove'}}});
 // grown-up corner opens on a 1-second press, so little fingers don't wander in
 let holdT=null;const gear=$('gear');
@@ -704,6 +757,14 @@ const startHold=e=>{e.preventDefault();gear.classList.add('holding');holdT=setTi
 const endHold=()=>{clearTimeout(holdT);gear.classList.remove('holding')};
 gear.addEventListener('pointerdown',startHold);gear.addEventListener('pointerup',endHold);gear.addEventListener('pointerleave',endHold);
 gear.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')drawGrown()});
+// slide a finger across the kitchen letters
+{const kT=$('kTiles');let cur=-1,down=false;
+ const at=(x,y)=>{const e=document.elementFromPoint(x,y),t=e&&e.closest&&e.closest('#kTiles .tile');return t?+t.dataset.i:-1};
+ const enter=i=>{if(i===cur)return;cur=i;if(i<0||kDone){holdStop(false);light(kTiles(),-1);return}kHelp=Math.max(kHelp,1);light(kTiles(),i);holdStart(units(kWord)[i])};
+ kT.addEventListener('pointerdown',e=>{ctx();down=true;try{kT.setPointerCapture(e.pointerId)}catch(_){}enter(at(e.clientX,e.clientY));e.preventDefault()});
+ kT.addEventListener('pointermove',e=>{if(down)enter(at(e.clientX,e.clientY))});
+ const up=()=>{down=false;enter(-1)};kT.addEventListener('pointerup',up);kT.addEventListener('pointercancel',up);
+ kT.addEventListener('contextmenu',e=>e.preventDefault())}
 $('recFile').onchange=e=>{const f=e.target.files[0];if(f)recImport(f);e.target.value=''};
 drawReaders();
 }
