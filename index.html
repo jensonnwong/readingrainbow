@@ -688,7 +688,7 @@ const SHOP=[
  {id:'wall-mint',cat:'home',slot:'wall',val:'mint',name:'Mint walls',price:15},{id:'wall-sky',cat:'home',slot:'wall',val:'sky',name:'Blue walls',price:15},{id:'wall-lilac',cat:'home',slot:'wall',val:'lilac',name:'Purple walls',price:15},{id:'wall-stripes',cat:'home',slot:'wall',val:'stripes',name:'Stripy walls',price:22},{id:'wall-dots',cat:'home',slot:'wall',val:'dots',name:'Dotty walls',price:22},
  {id:'view-rainbow',cat:'home',slot:'view',val:'rainbow',name:'Rainbow window',price:16},{id:'view-night',cat:'home',slot:'view',val:'night',name:'Starry window',price:18},{id:'view-beach',cat:'home',slot:'view',val:'beach',name:'Beach window',price:20},
  {id:'bed-pink',cat:'home',slot:'bed',val:'pink',name:'Pink bed',price:12},{id:'bed-yellow',cat:'home',slot:'bed',val:'yellow',name:'Yellow bed',price:12},
- {id:'frame',cat:'home',name:'My drawing',price:15},{id:'picture',cat:'home',name:'Picture',price:12},{id:'plant',cat:'home',name:'Plant',price:12},{id:'bunting',cat:'home',name:'Party flags',price:15},{id:'lamp',cat:'home',name:'Lamp',price:16},{id:'shelf',cat:'home',name:'Bookshelf',price:20}];
+ {id:'frame',cat:'home',name:'My drawing',price:15,art:0},{id:'frame2',cat:'home',name:'Another drawing',price:20,art:1},{id:'picture',cat:'home',name:'Picture',price:12},{id:'plant',cat:'home',name:'Plant',price:12},{id:'bunting',cat:'home',name:'Party flags',price:15},{id:'lamp',cat:'home',name:'Lamp',price:16},{id:'shelf',cat:'home',name:'Bookshelf',price:20}];
 const DEFAULTS={rug:'pink',wall:'peach',view:'day',bed:'teal'};
 const owns=it=>kid.own.includes(it.id);
 function isOn(it){if(!owns(it))return false;if(it.cat==='pet')return kid.wear[it.slot]===it.id;if(it.slot)return kid.home[it.slot]===it.val;return !kid.off.includes(it.id)}
@@ -698,11 +698,13 @@ function dressRoom(){const h=kid.home;$('room').style.background=`linear-gradien
   $('rRug').style.background=RUGS[h.rug||'pink'];$('rWindow').style.background=VIEWS[h.view||'day'];
   const bd=BEDS[h.bed||'teal'];$('rBed').style.background=bd[0];$('rBed').style.boxShadow=`inset 0 -6px 0 ${bd[1]}`;
   const put=(set)=>Object.keys(set).filter(id=>kid.own.includes(id)&&!kid.off.includes(id)).map(id=>`<div class="ritem" style="${set[id].css}">${set[id].svg}</div>`).join('');
-  const art=kid.own.includes('frame')?`<button class="ritem artframe" id="artFrame" style="right:6%;top:34%;width:22%" aria-label="My drawing: tap to draw">${artInner()}</button>`:'';
+  const SPOTS=['right:4%;top:31%;width:29%','left:38%;top:25%;width:26%'];
+  const art=SHOP.filter(it=>it.art!=null&&kid.own.includes(it.id)).map(it=>`<button class="ritem artframe" data-art="${it.art}" style="${SPOTS[it.art]}" aria-label="My drawing: tap to draw">${artInner(it.art)}</button>`).join('');
   $('rDecor').innerHTML=put(DECOR)+art;$('rToys').innerHTML=put(TOYS)}
 const PENCIL=`<svg viewBox="0 0 120 120" aria-hidden="true"><path d="M22 98 L28 74 L82 20 L100 38 L46 92Z" fill="#ffc93c" ${O}/><path d="M22 98 L28 74 L46 92Z" fill="#f3dcc0" ${O}/><path d="M72 30 L90 48" ${O}/></svg>`;
 const okArt=a=>typeof a==='string'&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(a);
-function artInner(){return okArt(kid.art)?`<img src="${kid.art}" alt="">`:PENCIL}
+function arts(){if(!kid.arts){kid.arts=[];if(okArt(kid.art))kid.arts[0]=kid.art;delete kid.art}return kid.arts}
+function artInner(i){const a=arts()[i];return okArt(a)?`<img src="${a}" alt="">`:PENCIL}
 // shop
 let shopTab='pet',buying=null;
 function thumb(it){if(it.cat==='pet')return `<div class="th">${petSvg(kid.pet,kid.stage,'happy','',['-46 -110 92 116','-56 -132 112 138','-66 -160 132 168'][kid.stage],{[it.slot]:it.id})}</div>`;
@@ -710,15 +712,15 @@ function thumb(it){if(it.cat==='pet')return `<div class="th">${petSvg(kid.pet,ki
   if(it.slot==='wall')return `<div class="th"><div class="sw" style="background:${WALLS[it.val]}"></div></div>`;
   if(it.slot==='view')return `<div class="th"><div class="sw" style="background:${VIEWS[it.val]};box-shadow:inset 0 0 0 5px #fff,0 0 0 3px var(--ink)"></div></div>`;
   if(it.slot==='bed')return `<div class="th"><div class="sw round" style="background:${BEDS[it.val][0]};box-shadow:inset 0 -8px 0 ${BEDS[it.val][1]},inset 0 0 0 3px var(--ink)"></div></div>`;
-  if(it.id==='frame')return `<div class="th"><div class="artframe" style="width:80%;pointer-events:none">${artInner()}</div></div>`;
+  if(it.art!=null)return `<div class="th"><div class="artframe" style="width:80%;pointer-events:none">${artInner(it.art)}</div></div>`;
   return `<div class="th">${(DECOR[it.id]||TOYS[it.id]).svg}</div>`}
 function openShop(){show('shop');$('shopSay').textContent='Read words to earn gems!';drawShop()}
 function drawShop(){drawGems();const tabs=[['pet','For '+kid.petName],['toys','Toys'],['home','Home']];
   $('shopTabs').innerHTML=tabs.map(([k,t])=>`<button class="chip${shopTab===k?' sel':''}" data-tab="${k}">${esc(t)}</button>`).join('');
   $('shopGrid').innerHTML=SHOP.filter(it=>it.cat===shopTab).map(it=>{const o=owns(it),on=isOn(it);
-    return `<button class="item${o?' own':''}${on?' onn':''}${!o&&kid.gems<it.price?' cant':''}" data-item="${it.id}">${thumb(it)}<b>${it.name}</b><span class="pr">${o?(it.id==='frame'?'Tap to draw':on?(it.cat==='pet'?'Wearing':'Using'):(it.cat==='pet'?'Tap to wear':'Tap to use')):GEM+it.price}</span></button>`}).join('')}
+    return `<button class="item${o?' own':''}${on?' onn':''}${!o&&kid.gems<it.price?' cant':''}" data-item="${it.id}">${thumb(it)}<b>${it.name}</b><span class="pr">${o?(it.art!=null?'Tap to draw':on?(it.cat==='pet'?'Wearing':'Using'):(it.cat==='pet'?'Tap to wear':'Tap to use')):GEM+it.price}</span></button>`}).join('')}
 function tapItem(id,el){const it=SHOP.find(x=>x.id===id);if(!it)return;
-  if(owns(it)&&it.id==='frame'){openDraw();return}
+  if(owns(it)&&it.art!=null){openDraw(it.art);return}
   if(owns(it)){toggleItem(it);drawShop();return}
   if(kid.gems<it.price){el.classList.remove('no');void el.offsetWidth;el.classList.add('no');const need=it.price-kid.gems;$('shopSay').textContent=`${need} more gem${need>1?'s':''} for the ${it.name.toLowerCase()}. Keep reading!`;return}
   buying=it;$('buyTitle').textContent=it.name;$('buyPic').innerHTML=thumb(it);$('buyYes').innerHTML=`Get it! ${GEM.replace('<svg','<svg style="width:20px;height:20px;vertical-align:-3px"')} ${it.price}`;$('buyOver').classList.add('on')}
@@ -727,22 +729,22 @@ function toggleItem(it){if(it.cat==='pet'){kid.wear[it.slot]=kid.wear[it.slot]==
   else{const i=kid.off.indexOf(it.id);if(i>=0)kid.off.splice(i,1);else kid.off.push(it.id)}save()}
 function buy(){const it=buying;buying=null;$('buyOver').classList.remove('on');if(!it||owns(it)||kid.gems<it.price)return;
   kid.gems-=it.price;kid.own.push(it.id);if(it.cat==='pet')kid.wear[it.slot]=it.id;else if(it.slot)kid.home[it.slot]=it.val;save();confetti();
-  $('shopSay').textContent=it.cat==='pet'?`${kid.petName} loves it!`:'It is in the room now!';drawShop();if(it.id==='frame')setTimeout(openDraw,900)}
+  $('shopSay').textContent=it.cat==='pet'?`${kid.petName} loves it!`:'It is in the room now!';drawShop();if(it.art!=null)setTimeout(()=>openDraw(it.art),900)}
 /* ---- drawing for the picture frame ---- */
 const COLORS=['#2b2b33','#e2393f','#f5892b','#ffc93c','#4fb062','#3a8ee0','#8b5cf6','#ff7fb0','#8a5a2b'];
-let dCol=COLORS[1],dSize=7,dErase=false,dUndo=[],dDown=false,dLast=null;
+let dCol=COLORS[1],dSize=7,dErase=false,dUndo=[],dDown=false,dLast=null,dIdx=0;
 const cv=$('cv'),cx=cv.getContext('2d');
 function drawTools(){$('pal').innerHTML=COLORS.map(c=>`<button data-col="${c}" class="${!dErase&&c===dCol?'sel':''}" style="background:${c}" aria-label="colour"></button>`).join('');
   document.querySelectorAll('.dtools [data-size]').forEach(b=>b.classList.toggle('sel',+b.dataset.size===dSize));$('drawErase').classList.toggle('sel',dErase)}
 function blank(){cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height)}
-function openDraw(){show('draw');blank();dUndo=[];dErase=false;drawTools();
-  if(okArt(kid.art)){const im=new Image();im.onload=()=>{if(document.querySelector('#draw.on')&&!dUndo.length)cx.drawImage(im,0,0,cv.width,cv.height)};im.src=kid.art}}
+function openDraw(i){dIdx=i||0;show('draw');blank();dUndo=[];dErase=false;drawTools();const cur=arts()[dIdx];
+  if(okArt(cur)){const im=new Image();im.onload=()=>{if(document.querySelector('#draw.on')&&!dUndo.length)cx.drawImage(im,0,0,cv.width,cv.height)};im.src=cur}}
 function dPos(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height}}
 function dSeg(a,b){cx.strokeStyle=dErase?'#fff':dCol;cx.lineWidth=dErase?34:dSize;cx.lineCap='round';cx.lineJoin='round';cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke()}
 cv.addEventListener('pointerdown',e=>{e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(_){}try{dUndo.push(cx.getImageData(0,0,cv.width,cv.height));if(dUndo.length>12)dUndo.shift()}catch(_){}dDown=true;dLast=dPos(e);dSeg(dLast,{x:dLast.x+.01,y:dLast.y})});
 cv.addEventListener('pointermove',e=>{if(!dDown)return;const p=dPos(e);dSeg(dLast,p);dLast=p});
 const dUp=()=>{dDown=false};cv.addEventListener('pointerup',dUp);cv.addEventListener('pointercancel',dUp);
-function drawSave(){try{const t=document.createElement('canvas');t.width=320;t.height=240;t.getContext('2d').drawImage(cv,0,0,320,240);const a=t.toDataURL('image/jpeg',.82);if(okArt(a)){kid.art=a;save()}}catch(e){}confetti();openRoom()}
+function drawSave(){try{const t=document.createElement('canvas');t.width=320;t.height=240;t.getContext('2d').drawImage(cv,0,0,320,240);const a=t.toDataURL('image/jpeg',.82);if(okArt(a)){arts()[dIdx]=a;save()}}catch(e){}confetti();openRoom()}
 
 /* ================= kitchen: read to feed ================= */
 let kWord=null,kHelp=0,kMiss=0,kDone=false;
@@ -887,7 +889,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
   else if(t.dataset.sound){sound(t.dataset.sound);t.classList.add('lit');setTimeout(()=>t.classList.remove('lit'),500)}
   else if(t.dataset.ear!=null){const w=wChoices[+t.dataset.ear];const btn=document.querySelector(`[data-choice="${t.dataset.ear}"]`);btn.classList.add('lit');soundOut(w,null,false);setTimeout(()=>btn.classList.remove('lit'),1500);wTries=Math.max(wTries,0)}
   else if(t.dataset.choice!=null)choose(+t.dataset.choice);
-  else if(t.id==='artFrame')openDraw();
+  else if(t.dataset.art!=null)openDraw(+t.dataset.art);
   else if(t.dataset.col){dCol=t.dataset.col;dErase=false;drawTools()}
   else if(t.dataset.size&&t.closest('.dtools')){dSize=+t.dataset.size;dErase=false;drawTools()}
   else if(t.id==='drawErase'){dErase=!dErase;drawTools()}
