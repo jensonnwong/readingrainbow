@@ -96,6 +96,7 @@ label{font-size:15px;color:var(--soft);display:block;margin:14px 0 6px}
 .food.eaten{right:42%;bottom:24%;width:6%;opacity:0}
 .tiles{--n:3;display:flex;justify-content:center;gap:8px;flex-wrap:nowrap;margin:6px 0 2px;touch-action:none}
 #kTiles .tile{width:min(86px,calc((min(100vw,480px) - 64px - (var(--n) - 1) * 8px) / var(--n)));font-size:min(68px,calc((min(100vw,480px) - 64px) / var(--n) * .72))}
+#kTiles .tile.two{letter-spacing:-.04em;font-size:min(54px,calc((min(100vw,480px) - 64px) / var(--n) * .56))}
 .tile{width:min(19vw,86px);aspect-ratio:1/1.1;background:var(--wall);border-radius:18px;font:700 clamp(46px,13vw,68px)/1 Andika,sans-serif;box-shadow:0 5px 0 var(--line);display:grid;place-items:center;transition:background .2s,color .2s,transform .15s}
 .tile.lit{background:var(--sun);transform:translateY(-4px)}.tile.read{background:var(--leaf);color:#fff}
 .tile.new{box-shadow:0 0 0 4px var(--berry),0 5px 0 var(--line)}
@@ -451,8 +452,8 @@ const SETS=[
 const HEART=['i','a','the','is','see'];
 // decodable words, tagged with the set that introduces their newest letter
 const WORDS={
- 0:'sat sad pat pan pad pin pit tap tan tin tip nap man map mat mad dad dip did sit sip an in it am ant and mint spin snap snip spit sand past mist pants stamp dim mid tad nip sap damp mast tint pant spat span stand dips naps maps pats taps sips tips pins mats ants pans mints spins'.split(' '),
- 1:'dog cat pig top mom cap dig got pot kid cot nod mop can tag kit not gas pop cod dot pod kiss cop gap stop spot skip skin camp pond mask cog sag tot kin cats dogs pigs pots tops mops caps kits cots kids dots cast cost gasp stomp task disk scan skim snag stag moss toss act'.split(' '),
+ 0:'sat sad pat pan pad pin pit tap tan tin tip nap man map mat mad dad dip did sit sip an in it am ant and mint spin snap snip spit sand past mist pants stamp dim mid tad nip sap damp mast tint pant spat span stand dips naps maps pats taps sips tips pins mats ants pans mints spins sits pits tins pads dads nips tints stamps stands sands masts mists spits snips snaps spans add pass mass miss inn mitt tat din dam dams tamp amp imp pip pips stint midst admit insist satin tans'.split(' '),
+ 1:'dog cat pig top mom cap dig got pot kid cot nod mop can tag kit not gas pop cod dot pod kiss cop gap stop spot skip skin camp pond mask cog sag tot kin cats dogs pigs pots tops mops caps kits cots kids dots cast cost gasp stomp task disk scan skim snag stag moss toss act cogs gaps tags cans cops gig gag con camps costs ink pink sink tank sank mink gasps nods moms odd opt tots tog pops pods sod stops spots skid skips skit pact tact ponds acts sock dock pack sack tack pick sick tick kick mock snack stack stick stock smock picnic cannot catnip mascot panic attic comic tiptop gossip'.split(' '),
  2:'ham hen bed red hop hot rat bat bag net pet ten rob bib hat hit him rip rag rest beg egg'.split(' '),
  3:'nut fig bun sun fun cup mud bug hug run up us fan fat lip log lap hut tub'.split(' '),
  4:'jam yam wag zip van box fox web yes wet zap jet'.split(' ')};
@@ -536,6 +537,17 @@ async function loadOwn(){for(const [k,b] of await clipAll()){if(!own[k])try{own[
 const tkey=t=>'T:'+String(t).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 function playBuf(b,when){const c=ctx();const s=c.createBufferSource();s.buffer=b;s.connect(c.destination);s.start(when||0);return b.duration}
 function sound(ch,when){const c=ctx();if(!c)return .3;const b=own['L:'+ch.toLowerCase()]||buf[ch.toLowerCase()];if(!b)return .3;const s=c.createBufferSource();s.buffer=b;s.connect(c.destination);s.start(when||0);return b.duration}
+// the pet talks in babble: each letter of the line becomes a tiny, sped-up slice of its letter sound
+const PITCH={bunny:1.9,kitten:2.05,puppy:1.6,unicorn:1.85,dragon:1.2,panda:1.4,penguin:1.75,fox:1.7,dino:1.1};
+function babble(text,kind){const c=ctx();if(!c)return 0;try{speechSynthesis.cancel()}catch(e){}const rate=PITCH[kind]||1.6,g=c.createGain();g.gain.value=.9;g.connect(c.destination);
+  const ask=/\?/.test(text),loud=/!/.test(text),chars=text.toLowerCase().replace(/[^a-z ,.!?]/g,'').split(''),n=chars.length;let t=c.currentTime+.03;
+  chars.forEach((ch,i)=>{if(ch===' '){t+=.045;return}if(/[,.!?]/.test(ch)){t+=.11;return}const b=own['L:'+ch]||buf[ch];if(!b){t+=.05;return}
+    const src=c.createBufferSource(),e=c.createGain(),dur=.075,r=rate*(ask?1+.25*i/n:1)*(loud?1.06:1)*(.95+Math.random()*.1);src.buffer=b;src.playbackRate.value=r;
+    e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(1,t+.01);e.gain.setValueAtTime(1,t+dur-.015);e.gain.linearRampToValueAtTime(0,t+dur);
+    src.connect(e);e.connect(g);src.start(t,b.duration*(SUSTAIN.includes(ch)?.3:.06),dur*r+.05);src.stop(t+dur+.02);t+=dur*.9});
+  return t-c.currentTime}
+// a line the pet says: your recording if there is one, otherwise babble
+function petSay(text,rate,onend,kind){if(own[tkey(text)]||D.petVoice==='computer'){say(text,rate,onend);return}const d=babble(text,kind||(kid&&kid.pet));if(onend)setTimeout(onend,d*1000)}
 // voice: the most natural English voice on this device, or the one a grown-up picked
 const NOVELTY=/albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|kathy|grandma|grandpa|rocko|shelley|flo|eddy|reed|sandy/i;
 function voiceScore(v){let n=v.name,s=0;if(NOVELTY.test(n))return -99;if(!/^en/i.test(v.lang))return -50;
@@ -559,8 +571,8 @@ function say(text,rate,onend){const mine=own[tkey(text)];
 function sayDevice(text,rate,onend){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=pickVoice();if(v){u.voice=v;u.lang=v.lang}else u.lang='en-US';
   u.rate=rate||.95;u.pitch=1.05;if(onend)u.onend=onend;speechSynthesis.speak(u)}catch(e){if(onend)onend()}}
 // letters of a word as sound units (qu stays together)
-function units(w){const out=[];for(let i=0;i<w.length;i++){if(w[i]==='q'&&w[i+1]==='u'){out.push('qu');i++}else out.push(w[i])}return out}
-function sayUnit(u,when){return u==='qu'?sound('q',when):sound(u,when)}
+function units(w){const out=[];for(let i=0;i<w.length;i++){const a=w[i],b=w[i+1];if((a==='q'&&b==='u')||(a==='c'&&b==='k')||(a===b&&!'aeiou'.includes(a))){out.push(a+b);i++}else out.push(a)}return out}
+function sayUnit(u,when){return sound(u[0],when)}
 // sound a word out on its tiles, then optionally say it whole
 function soundOut(word,tiles,thenSay){const c=ctx();if(!c)return 0;let t=c.currentTime+.05;const us=units(word);
   us.forEach((u,i)=>{const at=t;const d=sayUnit(u,at);setTimeout(()=>light(tiles,i),(at-c.currentTime)*1000);t+=Math.max(d,.18)+.38});
@@ -572,7 +584,7 @@ const SUSTAIN='aeioufslmnrvz';let hold=null;
 function holdStart(u){const blend=!!hold;holdStop(true);const c=ctx();if(!c)return;const k=u[0].toLowerCase(),b=own['L:'+k]||buf[k];if(!b)return;
   const g=c.createGain();g.connect(c.destination);const t0=c.currentTime+.01;if(blend){g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(1,t0+.07)}const h={g,srcs:[],timer:null,t0,min:Math.min(b.duration,.32)};hold=h;
   const first=c.createBufferSource();first.buffer=b;h.srcs.push(first);
-  if(!SUSTAIN.includes(k)||u.length>1||b.duration<.22){first.connect(g);first.start(t0);h.oneShot=true;return}
+  if(!SUSTAIN.includes(k)||(u.length>1&&u[0]!==u[1])||b.duration<.22){first.connect(g);first.start(t0);h.oneShot=true;return}
   const A=b.duration*.3,B=b.duration*.8,seg=B-A,xf=Math.min(.06,seg/3);
   const g1=c.createGain();first.connect(g1);g1.connect(g);g1.gain.setValueAtTime(1,t0);g1.gain.setValueAtTime(1,t0+B-xf);g1.gain.linearRampToValueAtTime(0,t0+B);first.start(t0,0,B);
   let next=t0+B-xf;
@@ -617,7 +629,7 @@ function unlockNext(){kid.mastered[kid.set]=true;kid.set++;kid.newFood=(FOODS[ki
 function addCare(n){kid.meter=Math.min(100,kid.meter+n);save();drawHud();maybeGrow()}
 function maybeGrow(){if(kid.stage<2&&kid.meter>=100&&(kid.milestones||0)>kid.stage){kid.stage++;kid.meter=0;save();
   setTimeout(()=>{$('growTitle').textContent=`${kid.petName} grew up!`;$('growPet').innerHTML=petSvg(kid.pet,kid.stage,'happy').replace('<svg','<svg class="bigpet"');
-  $('growLine').textContent=`Now ${kid.petName} is ${STAGES[kid.stage].toLowerCase()}, because you read so many words!`;$('growOver').classList.add('on');confetti();say('Hooray! I grew up!',1)},900)}}
+  $('growLine').textContent=`Now ${kid.petName} is ${STAGES[kid.stage].toLowerCase()}, because you read so many words!`;$('growOver').classList.add('on');confetti();petSay('Hooray! I grew up!',1)},900)}}
 
 /* ================= screens ================= */
 function show(id){stopListening();document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));window.scrollTo(0,0)}
@@ -650,12 +662,12 @@ function openRoom(greet){if(!kid)return;show('roomScr');if(napDue()){goNap();ret
   $('room').appendChild(b);
   $('doorKitchen').classList.toggle('hint',want==='feed');$('doorWish').classList.toggle('hint',want==='wish');
   $('roomSay').textContent=want==='feed'?`${kid.petName} is hungry! Let's go to the kitchen.`:`${kid.petName} wants something. Tap Wishes!`;
-  if(greet)setTimeout(()=>say(want==='feed'?`Hi! I'm hungry!`:`I wish I could tell you what I want!`),400);
+  if(greet)setTimeout(()=>petSay(want==='feed'?`Hi! I'm hungry!`:`I wish I could tell you what I want!`),400);
   if(kid.newFood&&want==='feed')$('roomSay').textContent='Something new arrived in the kitchen!'}
 function drawHud(){$('meterFill').style.width=kid.meter+'%';$('stageLbl').textContent=STAGES[kid.stage]}
 function advance(){if(session.next==='feed'){session.feeds++;session.next=session.feeds>=2&&session.feeds%2===0?'wish':'feed'}else{session.wishes++;session.next='feed'}}
 function goNap(){day(kid).napped=true;save();$('napTitle').textContent=`${kid.petName} is sleepy...`;$('napPet').innerHTML=petSvg(kid.pet,kid.stage,'sleep').replace('<svg','<svg class="bigpet"');
-  $('room').classList.add('night');$('napOver').classList.add('on');say('Yawn... night night!',.8)}
+  $('room').classList.add('night');$('napOver').classList.add('on');petSay('Yawn... night night!',.8)}
 
 /* ================= gems, shop and the room's things ================= */
 const GEM=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9z" fill="#6cc3ff" stroke="#3b2a20" stroke-width="2" stroke-linejoin="round"/><path d="M2 9h20M9 3 7 9l5 12 5-12-2-6" fill="none" stroke="#3b2a20" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
@@ -750,7 +762,7 @@ function drawSave(){try{const t=document.createElement('canvas');t.width=320;t.h
 let kWord=null,kHelp=0,kMiss=0,kDone=false;
 function openKitchen(){if(napDue()){openRoom();return}show('kitchen');drawGems();
   if(kid.newFood){const f=kid.newFood;$('nfFood').innerHTML=foodSvg(f);const nl=SETS[kid.set].letters.split('').find(c=>f.includes(c));
-    $('nfLetter').innerHTML=`<button class="tile new" data-sound="${nl}">${nl}</button>`;$('newFoodOver').classList.add('on');say('Something new arrived!')}
+    $('nfLetter').innerHTML=`<button class="tile new" data-sound="${nl}">${nl}</button>`;$('newFoodOver').classList.add('on');petSay('Something new arrived!')}
   nextFood()}
 function nextFood(){const k=kid,top=Math.min(k.set,4);let pool=[];for(let s=0;s<=top;s++)pool=pool.concat(WORDS[s]||[]);
   if(k.newFood){kWord=k.newFood;k.newFood=null}
@@ -762,7 +774,7 @@ function nextFood(){const k=kid,top=Math.min(k.set,4);let pool=[];for(let s=0;s<
   kHelp=0;kMiss=0;kDone=false;
   $('kPet').innerHTML=petSvg(k.pet,k.stage,'hungry');$('kFood').className='food';$('kFood').innerHTML=foodSvg(kWord);
   const newest=SETS[Math.min(k.set,4)].letters;
-  $('kTiles').innerHTML=units(kWord).map((u,i)=>`<button class="tile${newest.includes(u[0])&&k.set>0&&wordSet(kWord)===k.set?' new':''}" data-i="${i}" aria-label="sound ${u}">${u}</button>`).join('');
+  $('kTiles').innerHTML=units(kWord).map((u,i)=>`<button class="tile${u.length>1?' two':''}${newest.includes(u[0])&&k.set>0&&wordSet(kWord)===k.set?' new':''}" data-i="${i}" aria-label="sound ${u}">${u}</button>`).join('');
   $('kTiles').style.setProperty('--n',units(kWord).length);
   $('kSay').textContent='Slide your finger across the letters, then read it to feed '+kid.petName+'.';$('kHeard').textContent='';$('kMic').textContent='Read it to feed!';
 }
@@ -776,7 +788,7 @@ function kListen(){if(kDone)return;ctx();
   if(started){$('kMic').classList.add('listening');$('kMic').textContent='Listening...'}}
 function feedWin(){if(kDone)return;kDone=true;stopListening();logRead(kWord,kHelp<2);
   kTiles().forEach((t,i)=>setTimeout(()=>t.classList.add('read'),i*160));
-  setTimeout(()=>{$('kFood').classList.add('eaten');$('kPet').innerHTML=petSvg(kid.pet,kid.stage,'eat');say(['Yum!','Yummy!','Num num num!'][Math.floor(Math.random()*3)],1)},500);
+  setTimeout(()=>{$('kFood').classList.add('eaten');$('kPet').innerHTML=petSvg(kid.pet,kid.stage,'eat');petSay(['Yum!','Yummy!','Num num num!'][Math.floor(Math.random()*3)],1)},500);
   setTimeout(()=>{$('kPet').innerHTML=petSvg(kid.pet,kid.stage,'happy');$('kSay').textContent=`${kid.petName} loved it!`;addCare(12);addGems(1);advance();
     setTimeout(()=>{if(session.next==='feed'&&!napDue())nextFood();else openRoom()},1300)},1900)}
 
@@ -797,7 +809,7 @@ function openWish(){if(napDue()){openRoom();return}show('wish');drawGems();
   $('wPet').innerHTML=petSvg(kid.pet,kid.stage,'happy');$('wBubble').innerHTML=iconSvg(wWish.icon);$('wBubble').style.animation='none';void $('wBubble').offsetWidth;$('wBubble').style.animation='';
   $('wSay').textContent=`What does ${kid.petName} want? Read the words and pick one.`;
   $('wChoices').innerHTML=wChoices.map((w,i)=>`<div class="choice"><button class="ear" data-ear="${i}" aria-label="Hear the letter sounds">${EAR}</button><button class="w" data-choice="${i}">${w}</button></div>`).join('');
-  say('What do I want?')}
+  petSay('What do I want?')}
 function act(kind,actName,done){const wrap=$('wPet');const P=kid.pet,S=kid.stage;let pose='happy',cls='',extra='';
   if(actName==='nap'){pose='sleep'}else if(actName==='sip'){pose='eat';extra=`<g transform="translate(40 -60) scale(.45)">${ICONS.cup}</g>`}
   else if(actName==='spin')cls='do-spin';else if(actName==='hop')cls='do-hop';else if(actName==='run'||actName==='skip')cls='do-hop';else if(actName==='sit')cls='do-sit';else if(actName==='nod')cls='do-nod';else if(actName==='stomp')cls='do-stomp';else if(actName==='stop'){pose='surprised';cls='do-freeze'}
@@ -810,11 +822,11 @@ function act(kind,actName,done){const wrap=$('wPet');const P=kid.pet,S=kid.stage
 function choose(i){if(wBusy)return;wBusy=true;ctx();const w=wChoices[i],btn=document.querySelector(`[data-choice="${i}"]`);
   const target=WISHES.find(x=>x.w===w);
   if(w===wWish.w){btn.classList.add('right');logRead(w,wTries<2);kid.wishRight=(kid.wishRight||0)+1;save();
-    act(kid.pet,wWish.act,()=>{say('Yes! That\'s what I wanted!',1);addCare(10);addGems(2);advance();setTimeout(()=>openRoom(),1400)})}
+    act(kid.pet,wWish.act,()=>{petSay('Yes! That\'s what I wanted!',1);addCare(10);addGems(2);advance();setTimeout(()=>openRoom(),1400)})}
   else{wTries++;btn.classList.add('wrong');
     if(target){act(kid.pet,target.act,()=>{silly()})}
     else{const wrap=$('wPet');wrap.className='petwrap do-shake';wrap.innerHTML=petSvg(kid.pet,kid.stage,'surprised');setTimeout(()=>{wrap.className='petwrap';silly()},1100)}}}
-function silly(){$('wPet').innerHTML=petSvg(kid.pet,kid.stage,'happy');say(['Hee hee! Not that one!','Silly! That is not it!','Oops! Try again!'][wTries%3],1);
+function silly(){$('wPet').innerHTML=petSvg(kid.pet,kid.stage,'happy');petSay(['Hee hee! Not that one!','Silly! That is not it!','Oops! Try again!'][wTries%3],1);
   $('wSay').textContent=wTries>=2?'Tap the ear to hear the sounds in each word.':'Not that! Read them again.';wBusy=false;
   if(wTries>=2){const i=wChoices.indexOf(wWish.w);soundOut(wWish.w,null,false)}}
 
@@ -823,11 +835,12 @@ function drawGrown(){let h='';
   if(kid){const rows=SETS.map((s,i)=>{const p=setProgress(kid,i);const st=i<kid.set?'Done':i===kid.set?`${Math.min(p.words,20)}/20 words, ${Math.min(p.days,2)}/2 days`:'Later';return `<tr><td>${s.name}</td><td>${st}</td></tr>`}).join('');
     const recent=kid.log.slice(-8).reverse().map(e=>`${esc(e.w)}${e.ind?'':' (helped)'}`).join(', ')||'None yet';
     h+=`<p style="margin:6px 0"><b>${esc(kid.name)}</b> with ${esc(kid.petName)} (${PETNAMES[kid.pet].toLowerCase()}, ${STAGES[kid.stage].toLowerCase()} stage), love meter ${kid.meter}%, ${kid.gems||0} gems.</p>
-    <table><tr><th>Letters</th><th>Progress</th></tr>${rows}</table><p style="font-size:14px;margin:4px 0"><b>Last words:</b> ${recent}</p>
+    <table><tr><th>Letters</th><th>Progress</th></tr>${rows}</table><p style="font-size:14px;margin:4px 0"><b>Last words:</b> ${recent}</p><p style="font-size:14px;margin:4px 0"><b>Kitchen words:</b> seen ${(kid.seen||[]).length} of ${availableWords(kid).length} before any repeat.</p>
     <div class="gbtns"><button id="gMark">Mark current letters done</button><button id="gBack">Step back a set</button><button id="gWake">Wake the pet</button><button id="gGems">Give 20 gems</button><button id="gReset">Remove this reader</button></div>`}
   const nRec=Object.keys(own).length;
   h+=`<label>Voices</label><div class="gbtns" style="margin-top:0"><button id="gRec">Record the voices (${nRec} recorded)</button></div>
-  <label>Computer voice for anything not recorded</label><div class="chips"><button class="chip${D.robot!==false?' sel':''}" data-robot="1">On</button><button class="chip${D.robot===false?' sel':''}" data-robot="0">Off</button></div>`;
+  <label>The pet's voice</label><div class="chips"><button class="chip${D.petVoice!=='computer'?' sel':''}" data-petvoice="babble">Pet babble</button><button class="chip${D.petVoice==='computer'?' sel':''}" data-petvoice="computer">Computer voice</button></div>
+  <label>Say whole words in the computer voice when not recorded</label><div class="chips"><button class="chip${D.robot!==false?' sel':''}" data-robot="1">On</button><button class="chip${D.robot===false?' sel':''}" data-robot="0">Off</button></div>`;
   const vs=englishVoices().slice(0,8),cur=pickVoice();
   h+=`<label>Computer voice</label>${vs.length?`<div class="chips">${vs.map((v,i)=>`<button class="chip${cur&&v.name===cur.name?' sel':''}" data-voice="${i}">${esc(v.name.replace(/\s*\(.*\)/,''))}${/premium|enhanced|natural|neural/i.test(v.name)?' ★':''}</button>`).join('')}</div>`:'<p style="font-size:14px;color:var(--soft)">No voices found yet. Close and reopen this corner.</p>'}
   <p style="font-size:13px;color:var(--soft);margin:8px 0 0">Tap a voice to hear it. ★ = a natural-sounding voice. On iPhone you can add free better ones: Settings › Accessibility › Spoken Content › Voices › English, then download one marked Enhanced or Premium (such as Ava or Zoe) and reopen the app.</p>
@@ -885,7 +898,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
   else if(t.id==='addKid'){$('kidName').value='';newStart=1;drawStart();show('newkid')}
   else if(t.dataset.kid!=null)startKid(+t.dataset.kid);
   else if(t.dataset.start!=null){newStart=+t.dataset.start;drawStart()}
-  else if(t.dataset.pet){pick=t.dataset.pet;drawPets();say(PETNAMES[pick])}
+  else if(t.dataset.pet){pick=t.dataset.pet;drawPets();petSay(PETNAMES[pick],1,null,pick)}
   else if(t.dataset.sound){sound(t.dataset.sound);t.classList.add('lit');setTimeout(()=>t.classList.remove('lit'),500)}
   else if(t.dataset.ear!=null){const w=wChoices[+t.dataset.ear];const btn=document.querySelector(`[data-choice="${t.dataset.ear}"]`);btn.classList.add('lit');soundOut(w,null,false);setTimeout(()=>btn.classList.remove('lit'),1500);wTries=Math.max(wTries,0)}
   else if(t.dataset.choice!=null)choose(+t.dataset.choice);
@@ -900,6 +913,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
   else if(t.dataset.tab){shopTab=t.dataset.tab;drawShop()}
   else if(t.dataset.item)tapItem(t.dataset.item,t);
   else if(t.dataset.nap){D.napMin=+t.dataset.nap;save();drawGrown()}
+  else if(t.dataset.petvoice){D.petVoice=t.dataset.petvoice;save();drawGrown();petSay('Yum! Yummy!',1)}
   else if(t.dataset.robot!=null){D.robot=t.dataset.robot==='1';save();drawGrown()}
   else if(t.id==='gRec'){$('grownOver').classList.remove('on');loadOwn().then(()=>{drawRec();$('recOver').classList.add('on')})}
   else if(t.dataset.rec)recToggle(t.dataset.rec,t);
