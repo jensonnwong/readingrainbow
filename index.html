@@ -452,11 +452,11 @@ const SETS=[
 const HEART=['i','a','the','is','see'];
 // decodable words, tagged with the set that introduces their newest letter
 const WORDS={
- 0:'sat sad pat pan pad pin pit tap tan tin tip nap man map mat mad dad dip did sit sip an in it am ant and mint spin snap snip spit sand past mist pants stamp dim mid tad nip sap damp mast tint pant spat span stand dips naps maps pats taps sips tips pins mats ants pans mints spins sits pits tins pads dads nips tints stamps stands sands masts mists spits snips snaps spans add pass mass miss inn mitt tat din dam dams tamp amp imp pip pips stint midst admit insist satin tans'.split(' '),
- 1:'dog cat pig top mom cap dig got pot kid cot nod mop can tag kit not gas pop cod dot pod kiss cop gap stop spot skip skin camp pond mask cog sag tot kin cats dogs pigs pots tops mops caps kits cots kids dots cast cost gasp stomp task disk scan skim snag stag moss toss act cogs gaps tags cans cops gig gag con camps costs ink pink sink tank sank mink gasps nods moms odd opt tots tog pops pods sod stops spots skid skips skit pact tact ponds acts sock dock pack sack tack pick sick tick kick mock snack stack stick stock smock picnic cannot catnip mascot panic attic comic tiptop gossip'.split(' '),
- 2:'ham hen bed red hop hot rat bat bag net pet ten rob bib hat hit him rip rag rest beg egg'.split(' '),
- 3:'nut fig bun sun fun cup mud bug hug run up us fan fat lip log lap hut tub'.split(' '),
- 4:'jam yam wag zip van box fox web yes wet zap jet'.split(' ')};
+ 0:'an am at in it sat sad sap sit sip sis pat pan pad pin pit pip tap tan tad tat tin tip nap nip nan man map mat mad mid dad dam did dim din dip ant and add amp imp inn its ads mint spin snap snip spit sand past mist pants stamp damp mast tint pant spat span stand dips naps maps pats taps sips tips pins mats ants pans mints spins sits pits tins pads dads nips tints stamps stands sands masts mists spits snips snaps spans pass mass miss mitt dams tamp pips stint midst admit insist satin tans'.split(' '),
+ 1:'on dog dig dot doc cat cap can cam cot cod cop cog con kid kit kin got gas gap gig mom mop nod not pop pot pod pig top tot tog tag sag ink odd opt act ask kiss stop spot skip skin camp pond mask cats dogs pigs pots tops mops caps kits cots kids dots cast cost gasp stomp task disk scan skim snag stag moss toss cogs gaps tags cans cops camps costs pink sink tank sank mink gasps nods moms tots pops pods stops spots skid skips skit pact tact ponds acts sock dock pack sack tack pick sick tick kick mock snack stack stick stock smock picnic cannot catnip mascot panic attic comic tiptop gossip'.split(' '),
+ 2:'hen hem hid him hip hit hop hot hog had ham hat bad bag ban bat bed beg bet bib bid big bin bit bog bop cab cob dab gab nab tab sob rob rib rid rig rim rip rod rot ram ran rap rat rag red den men pen ten peg pet net met set get egg end rest hand best bend nest tent desk crab band'.split(' '),
+ 3:'up us bug bud bun bus but cub cup cut dug fun gum gut hug hum hut mud mug nut pup pug rub rug run rut sub sum sun tub tug fan fat fed fib fig fin fit fog if elf elk elm lab lad lap led leg let lid lip lit log lot lug gel pal gal ill off help frog flag drum milk lamp golf gift bump dust fist list lost melt belt hunt'.split(' '),
+ 4:'jam jab jet jig job jog jot jug wag web wed wet wig win wit yak yam yap yes yet yum van vat vet box fox fix mix six wax tax fax ox zap zip zig zag jump swim twin quit quiz next just went west yelp'.split(' ')};
 const FOODS={0:['dip','mint'],1:['cod','pod','pop'],2:['ham','egg'],3:['nut','bun','fig'],4:['jam','yam']};
 // pet wishes: word, which set it needs, the picture in the thought bubble, what the pet does
 const WISHES=[
@@ -621,8 +621,13 @@ function wordMatch(target){return text=>text.toLowerCase().replace(/[^a-z' ]/g,'
 
 /* ================= progress ================= */
 function wordSet(w){for(let s=SETS.length-1;s>=0;s--)if(SETS[s].letters.split('').some(c=>w.includes(c)))return s;return 0}
-function availableWords(k){let out=[];for(let s=0;s<=Math.min(k.set,4);s++)out=out.concat(WORDS[s]||[]);return out}
-function logRead(w,independent){if(!kid)return;day(kid).reads++;kid.log.push({w,ind:!!independent,d:today(),s:wordSet(w)});if(kid.log.length>2000)kid.log.splice(0,500);checkMastery();save()}
+// short words first: 3 letters until she has read plenty of them, then 4, then any length
+const LEN_GOALS={3:100,4:60};
+const maxLen=k=>k.len||3;
+function distinctRead(k,test){return new Set(k.log.filter(e=>e.ind&&test(e.w.length)).map(e=>e.w)).size}
+function checkLength(){const L=maxLen(kid);if(L===3&&distinctRead(kid,n=>n<=3)>=LEN_GOALS[3])kid.len=4;else if(L===4&&distinctRead(kid,n=>n===4)>=LEN_GOALS[4])kid.len=9}
+function availableWords(k){let out=[];for(let s=0;s<=Math.min(k.set,4);s++)out=out.concat(WORDS[s]||[]);return out.filter(w=>w.length<=maxLen(k))}
+function logRead(w,independent){if(!kid)return;day(kid).reads++;kid.log.push({w,ind:!!independent,d:today(),s:wordSet(w)});if(kid.log.length>2000)kid.log.splice(0,500);checkMastery();checkLength();save()}
 function setProgress(k,s){const L=k.log.filter(e=>e.ind&&e.s===s);return{words:L.length,days:new Set(L.map(e=>e.d)).size}}
 function checkMastery(){const s=kid.set;if(s>=SETS.length-1)return;const p=setProgress(kid,s);if(p.words>=20&&p.days>=2)unlockNext()}
 function unlockNext(){kid.mastered[kid.set]=true;kid.set++;kid.newFood=(FOODS[kid.set]||[])[0]||null;kid.milestones=(kid.milestones||0)+1;save()}
@@ -646,7 +651,7 @@ function drawPets(){$('petGrid').innerHTML=PETS.map(k=>`<button class="petpick${
 
 /* ================= the room ================= */
 function day(k){if(!k.day||k.day.d!==today())k.day={d:today(),ms:0,reads:0,napped:false};return k.day}
-function startKid(i){kid=D.kids[i];delete kid.napDate;day(kid);kid.gems=kid.gems||0;kid.own=kid.own||[];kid.wear=kid.wear||{};kid.home=kid.home||{};kid.off=kid.off||[];WEAR=kid.wear;session={feeds:0,wishes:0,next:'feed'};openRoom(true)}
+function startKid(i){kid=D.kids[i];delete kid.napDate;day(kid);kid.len=kid.len||3;kid.gems=kid.gems||0;kid.own=kid.own||[];kid.wear=kid.wear||{};kid.home=kid.home||{};kid.off=kid.off||[];WEAR=kid.wear;session={feeds:0,wishes:0,next:'feed'};openRoom(true)}
 // only time spent actually reading (kitchen or wishes, app in front) counts toward the nap
 setInterval(()=>{if(!kid||document.hidden)return;if(!document.querySelector('#kitchen.on,#wish.on')||document.querySelector('.over.on'))return;const d=day(kid);d.ms+=1000;if(d.ms%10000===0)save()},1000);
 const MIN_READS=10;
@@ -764,12 +769,14 @@ function openKitchen(){if(napDue()){openRoom();return}show('kitchen');drawGems()
   if(kid.newFood){const f=kid.newFood;$('nfFood').innerHTML=foodSvg(f);const nl=SETS[kid.set].letters.split('').find(c=>f.includes(c));
     $('nfLetter').innerHTML=`<button class="tile new" data-sound="${nl}">${nl}</button>`;$('newFoodOver').classList.add('on');petSay('Something new arrived!')}
   nextFood()}
-function nextFood(){const k=kid,top=Math.min(k.set,4);let pool=[];for(let s=0;s<=top;s++)pool=pool.concat(WORDS[s]||[]);
+function nextFood(){const k=kid,top=Math.min(k.set,4),pool=availableWords(k);
   if(k.newFood){kWord=k.newFood;k.newFood=null}
   else{k.seen=k.seen||[];let fresh=pool.filter(w=>!k.seen.includes(w)&&w!==kWord);if(!fresh.length){k.seen=[];fresh=pool.filter(w=>w!==kWord)}
     // half the time a word with her newest letters, real foods first
-    const newest=fresh.filter(w=>wordSet(w)===top),foods=fresh.filter(w=>FOODART[w]);
-    const from=(foods.length&&Math.random()<.35)?foods:(newest.length&&Math.random()<.5)?newest:fresh;kWord=from[Math.floor(Math.random()*from.length)]}
+    // once longer words are open they are still the smaller share, so short words keep coming
+    const shortW=fresh.filter(w=>w.length<=3),longW=fresh.filter(w=>w.length>3),base=(longW.length&&(!shortW.length||Math.random()<.3))?longW:shortW;
+    const newest=base.filter(w=>wordSet(w)===top),foods=base.filter(w=>FOODART[w]);
+    const from=(foods.length&&Math.random()<.2)?foods:(newest.length&&Math.random()<.5)?newest:base;kWord=from[Math.floor(Math.random()*from.length)]}
   k.seen=k.seen||[];if(!k.seen.includes(kWord))k.seen.push(kWord);save();
   kHelp=0;kMiss=0;kDone=false;
   $('kPet').innerHTML=petSvg(k.pet,k.stage,'hungry');$('kFood').className='food';$('kFood').innerHTML=foodSvg(kWord);
@@ -795,7 +802,7 @@ function feedWin(){if(kDone)return;kDone=true;stopListening();logRead(kWord,kHel
 /* ================= wishes ================= */
 let wWish=null,wChoices=[],wTries=0,wBusy=false;
 function openWish(){if(napDue()){openRoom();return}show('wish');drawGems();
-  const okAll=WISHES.filter(x=>x.set<=kid.set);kid.seenWish=kid.seenWish||[];let ok=okAll.filter(x=>!kid.seenWish.includes(x.w));if(!ok.length){kid.seenWish=[];ok=okAll.filter(x=>!wWish||x.w!==wWish.w)}wWish=ok[Math.floor(Math.random()*ok.length)];kid.seenWish.push(wWish.w);save();wTries=0;wBusy=false;
+  const okAll=WISHES.filter(x=>x.set<=kid.set&&x.w.length<=maxLen(kid));kid.seenWish=kid.seenWish||[];let ok=okAll.filter(x=>!kid.seenWish.includes(x.w));if(!ok.length){kid.seenWish=[];ok=okAll.filter(x=>!wWish||x.w!==wWish.w)}wWish=ok[Math.floor(Math.random()*ok.length)];kid.seenWish.push(wWish.w);save();wTries=0;wBusy=false;
   // harder choices once she's doing well: distractors share letters with the answer
   const pool=availableWords(kid).filter(w=>w!==wWish.w&&!HEART.includes(w));
   const hard=(kid.wishRight||0)>=6;
@@ -835,7 +842,9 @@ function drawGrown(){let h='';
   if(kid){const rows=SETS.map((s,i)=>{const p=setProgress(kid,i);const st=i<kid.set?'Done':i===kid.set?`${Math.min(p.words,20)}/20 words, ${Math.min(p.days,2)}/2 days`:'Later';return `<tr><td>${s.name}</td><td>${st}</td></tr>`}).join('');
     const recent=kid.log.slice(-8).reverse().map(e=>`${esc(e.w)}${e.ind?'':' (helped)'}`).join(', ')||'None yet';
     h+=`<p style="margin:6px 0"><b>${esc(kid.name)}</b> with ${esc(kid.petName)} (${PETNAMES[kid.pet].toLowerCase()}, ${STAGES[kid.stage].toLowerCase()} stage), love meter ${kid.meter}%, ${kid.gems||0} gems.</p>
-    <table><tr><th>Letters</th><th>Progress</th></tr>${rows}</table><p style="font-size:14px;margin:4px 0"><b>Last words:</b> ${recent}</p><p style="font-size:14px;margin:4px 0"><b>Kitchen words:</b> seen ${(kid.seen||[]).length} of ${availableWords(kid).length} before any repeat.</p>
+    <table><tr><th>Letters</th><th>Progress</th></tr>${rows}</table><p style="font-size:14px;margin:4px 0"><b>Last words:</b> ${recent}</p><label>Word length</label><div class="chips">${[[3,'3 letters'],[4,'Up to 4'],[9,'Any length']].map(([v,t])=>`<button class="chip${maxLen(kid)===v?' sel':''}" data-len="${v}">${t}</button>`).join('')}</div>
+    <p style="font-size:13px;color:var(--soft);margin:8px 0 0">${maxLen(kid)===3?`Moves to 4 letters by itself after ${LEN_GOALS[3]} different short words read on her own. So far: ${distinctRead(kid,n=>n<=3)}.`:maxLen(kid)===4?`Moves to longer words after ${LEN_GOALS[4]} different 4-letter words read on her own. So far: ${distinctRead(kid,n=>n===4)}.`:'All word lengths are open.'} New letters keep unlocking either way.</p>
+    <p style="font-size:14px;margin:8px 0 4px"><b>Kitchen words:</b> seen ${(kid.seen||[]).length} of ${availableWords(kid).length} before any repeat.</p>
     <div class="gbtns"><button id="gMark">Mark current letters done</button><button id="gBack">Step back a set</button><button id="gWake">Wake the pet</button><button id="gGems">Give 20 gems</button><button id="gReset">Remove this reader</button></div>`}
   const nRec=Object.keys(own).length;
   h+=`<label>Voices</label><div class="gbtns" style="margin-top:0"><button id="gRec">Record the voices (${nRec} recorded)</button></div>
@@ -914,6 +923,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
   else if(t.dataset.item)tapItem(t.dataset.item,t);
   else if(t.dataset.nap){D.napMin=+t.dataset.nap;save();drawGrown()}
   else if(t.dataset.petvoice){D.petVoice=t.dataset.petvoice;save();drawGrown();petSay('Yum! Yummy!',1)}
+  else if(t.dataset.len&&kid){kid.len=+t.dataset.len;kid.seen=(kid.seen||[]).filter(w=>w.length<=kid.len);save();drawGrown()}
   else if(t.dataset.robot!=null){D.robot=t.dataset.robot==='1';save();drawGrown()}
   else if(t.id==='gRec'){$('grownOver').classList.remove('on');loadOwn().then(()=>{drawRec();$('recOver').classList.add('on')})}
   else if(t.dataset.rec)recToggle(t.dataset.rec,t);
@@ -926,7 +936,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
 $('toPets').onclick=()=>{const n=$('kidName').value.trim();if(!n){$('kidName').focus();return}pick=null;$('petName').value='';drawPets();$('chooseTitle').textContent=`Pick your pet, ${n}!`;show('choose')};
 $('petName').oninput=()=>{$('adopt').disabled=!pick};
 $('adopt').onclick=()=>{const n=$('kidName').value.trim()||'Reader',pn=$('petName').value.trim()||PETNAMES[pick];
-  D.kids.push({id:Date.now(),name:n,pet:pick,petName:pn,stage:0,meter:0,set:newStart,mastered:newStart?[true]:[],log:[],newFood:null,milestones:0,wishRight:0,gems:0,own:[],wear:{},home:{},off:[]});save();startKid(D.kids.length-1)};
+  D.kids.push({id:Date.now(),name:n,pet:pick,petName:pn,stage:0,meter:0,set:newStart,mastered:newStart?[true]:[],log:[],newFood:null,milestones:0,wishRight:0,len:3,gems:0,own:[],wear:{},home:{},off:[]});save();startKid(D.kids.length-1)};
 $('switchKid').onclick=()=>{kid=null;drawReaders()};
 $('doorShop').onclick=openShop;$('buyYes').onclick=buy;$('buyNo').onclick=()=>{buying=null;$('buyOver').classList.remove('on')};
 $('doorKitchen').onclick=openKitchen;$('doorWish').onclick=openWish;
